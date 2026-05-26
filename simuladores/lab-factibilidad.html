@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio de Factibilidad — RED ACADEMY</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#9B7A45;--gold-l:#C8A857;--gold-d:#7A5C2E;--gold-p:rgba(155,122,69,0.10);
+  --bg:#FFFFFF;--bg2:#F8F9FA;--bg3:#F0F2F5;--bg4:#E8EAED;--bg5:#DFE1E5;
+  --text:#111B21;--muted:#5F6368;--faint:#D3D6DA;
+  --dim:rgba(0,0,0,0.08);--b:rgba(0,0,0,0.14);
+  --green:#1E8E3E;--green-p:rgba(30,142,62,0.08);
+  --red:#D93025;--red-p:rgba(217,48,37,0.08);
+  --blue:#1A73E8;--orange:#E37400;
+}
+body{background:#FFFFFF;color:var(--text);font-family:'Outfit',sans-serif;font-weight:300;min-height:100vh;}
+
+/* NAV */
+.nav{height:56px;background:#FFFFFF;border-bottom:1px solid #E0E0E0;box-shadow:0 1px 3px rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;letter-spacing:.12em;color:var(--gold);}
+.nav-logo span{color:var(--text);font-weight:300;}
+.nav-badge{font-size:10px;letter-spacing:.18em;text-transform:uppercase;background:var(--gold-p);color:var(--gold);padding:4px 12px;border:1px solid var(--b);}
+.nav-right{display:flex;gap:10px;align-items:center;}
+.btn{padding:8px 20px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;font-family:'Outfit',sans-serif;border:none;transition:all .2s;}
+.btn-gold{background:var(--gold);color:#080808;}
+.btn-gold:hover{background:var(--gold-l);}
+.btn-outline{background:transparent;border:1px solid var(--b);color:var(--muted);}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:380px 1fr;gap:0;min-height:calc(100vh - 56px);}
+
+/* INPUT PANEL */
+.input-panel{background:#FFFFFF;border-right:1px solid #E0E0E0;overflow-y:auto;height:calc(100vh - 56px);position:sticky;top:56px;}
+.input-header{padding:20px 24px;border-bottom:1px solid var(--dim);background:#FFFFFF;}
+.input-header h2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;}
+.input-header h2 em{font-style:italic;color:var(--gold);}
+.input-header p{font-size:12px;color:var(--muted);margin-top:4px;}
+
+.section-block{border-bottom:1px solid var(--dim);}
+.section-title{display:flex;align-items:center;gap:8px;padding:12px 24px;background:#F0F2F5;cursor:pointer;user-select:none;}
+.section-title .icon{font-size:14px;}
+.section-title span{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:400;}
+.section-title .toggle{margin-left:auto;color:var(--muted);font-size:12px;transition:transform .2s;}
+.section-title.open .toggle{transform:rotate(90deg);}
+.section-body{padding:16px 24px;display:none;}
+.section-body.open{display:block;}
+
+.field{margin-bottom:14px;}
+.field label{display:flex;align-items:center;justify-content:space-between;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.field label .hint{font-size:10px;color:var(--faint);text-transform:none;letter-spacing:0;}
+.field-row{display:grid;grid-template-columns:1fr 80px;gap:8px;align-items:center;}
+.field input[type=range]{width:100%;accent-color:var(--gold);cursor:pointer;height:4px;}
+.field .val-box{background:#F0F2F5;border:1px solid #DADCE0;padding:7px 10px;font-size:13px;font-weight:500;color:var(--gold);text-align:right;font-family:'Outfit',sans-serif;white-space:nowrap;}
+.field input[type=number]{width:100%;background:#F0F2F5;border:1px solid #DADCE0;color:var(--text);padding:9px 12px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.field input[type=number]:focus{border-color:var(--gold);}
+.presets{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.preset-btn{padding:4px 10px;font-size:10px;letter-spacing:.08em;background:#F0F2F5;border:1px solid #DADCE0;color:var(--muted);cursor:pointer;transition:all .15s;font-family:'Outfit',sans-serif;}
+.preset-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+/* RESULTS PANEL */
+.results-panel{overflow-y:auto;height:calc(100vh - 56px);}
+.results-inner{padding:24px 28px;}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.kpi{background:#F8F9FA;border:1px solid #DADCE0;padding:16px 18px;position:relative;transition:border-color .2s;}
+.kpi.positive{border-color:rgba(76,175,125,0.3);}
+.kpi.negative{border-color:rgba(224,85,85,0.3);}
+.kpi.gold{border-color:var(--b);}
+.kpi-label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.kpi-value{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;line-height:1;}
+.kpi-value.green{color:var(--green);}
+.kpi-value.red{color:var(--red);}
+.kpi-value.gold-v{color:var(--gold);}
+.kpi-value.blue-v{color:var(--blue);}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.kpi-bar{height:3px;background:#D3D6DA;margin-top:10px;}
+.kpi-bar-fill{height:100%;transition:width .5s;}
+
+/* VIABILITY GAUGE */
+.viability-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px;}
+.via-card{padding:14px 18px;border:1px solid #DADCE0;background:#F8F9FA;display:flex;align-items:center;gap:12px;}
+.via-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.via-label{font-size:12px;color:var(--muted);}
+.via-result{font-size:13px;font-weight:500;margin-left:auto;}
+
+/* CHARTS */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.chart-card{background:#F8F9FA;border:1px solid #DADCE0;padding:18px;}
+.chart-card.full{grid-column:1/-1;}
+.chart-title{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.chart-title::before{content:'';display:block;width:20px;height:1px;background:var(--gold);}
+.chart-wrap{position:relative;height:220px;}
+.chart-wrap-tall{position:relative;height:180px;}
+
+/* SENSITIVITY TABLE */
+.sens-table{width:100%;border-collapse:collapse;font-size:12px;}
+.sens-table th,.sens-table td{padding:8px 12px;text-align:center;border:1px solid #DADCE0;}
+.sens-table th{background:#F0F2F5;font-weight:500;letter-spacing:.08em;font-size:10px;text-transform:uppercase;color:var(--muted);}
+.sens-table .row-hdr{text-align:left;color:var(--muted);font-size:11px;}
+.sens-table .base-cell{background:var(--gold-p);color:var(--gold);font-weight:600;border-color:var(--b);}
+.good-cell{color:var(--green);background:rgba(76,175,125,0.06);}
+.mid-cell{color:var(--gold);background:rgba(201,169,110,0.06);}
+.bad-cell{color:var(--red);background:rgba(224,85,85,0.06);}
+
+/* SCENARIOS */
+.scen-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.scen-card{padding:18px;border:1px solid #DADCE0;background:#F8F9FA;}
+.scen-name{font-size:10px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px;}
+.scen-card.pess .scen-name{color:var(--red);}
+.scen-card.base .scen-name{color:var(--gold);}
+.scen-card.opt .scen-name{color:var(--green);}
+.scen-card.base{border-color:#9B7A45;}
+.scen-roi{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;line-height:1;}
+.scen-card.pess .scen-roi{color:var(--red);}
+.scen-card.base .scen-roi{color:var(--gold);}
+.scen-card.opt .scen-roi{color:var(--green);}
+.scen-detail{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.7;}
+
+/* TOAST */
+.toast{position:fixed;bottom:16px;right:16px;background:#F0F2F5;border:1px solid var(--b);padding:12px 18px;font-size:12px;display:flex;align-items:center;gap:8px;z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;}
+.toast.show{transform:translateY(0);opacity:1;}
+.tdot{width:7px;height:7px;border-radius:50%;background:var(--green);}
+
+/* SECTION LABELS */
+.results-section-hdr{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;margin-top:4px;display:flex;align-items:center;gap:10px;}
+.results-section-hdr::after{content:'';flex:1;height:1px;background:var(--dim);}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr;}.input-panel{height:auto;position:static;}.results-panel{height:auto;}.kpi-grid{grid-template-columns:repeat(2,1fr);}.charts-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="nav-logo">RED <span>ACADEMY</span></div>
+    <div class="nav-badge">Laboratorio de Factibilidad</div>
+  </div>
+  <div class="nav-right">
+    <button class="btn btn-outline" onclick="resetAll()">Reiniciar</button>
+    <button class="btn btn-gold" onclick="exportReport()">Exportar PDF</button>
+  </div>
+</nav>
+
+<div class="layout">
+
+<!-- ── INPUT PANEL ── -->
+<div class="input-panel">
+  <div class="input-header">
+    <h2>Variables del <em>Proyecto</em></h2>
+    <p>Ajusta cada variable para ver el análisis en tiempo real</p>
+  </div>
+
+  <!-- TERRENO -->
+  <div class="section-block">
+    <div class="section-title open" onclick="toggleSection(this)">
+      <span class="icon">🏗</span><span>Terreno y Adquisición</span><span class="toggle">▶</span>
+    </div>
+    <div class="section-body open">
+      <div class="field">
+        <label>Precio del terreno <span class="hint">USD</span></label>
+        <input type="number" id="terreno" value="250000" min="10000" max="5000000" step="5000" oninput="calc()">
+        <div class="presets">
+          <button class="preset-btn" onclick="setVal('terreno',80000)">$80K</button>
+          <button class="preset-btn" onclick="setVal('terreno',150000)">$150K</button>
+          <button class="preset-btn" onclick="setVal('terreno',250000)">$250K</button>
+          <button class="preset-btn" onclick="setVal('terreno',500000)">$500K</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Área del terreno <span class="hint">m²</span></label>
+        <div class="field-row">
+          <input type="range" id="area_terreno" min="100" max="10000" value="1500" step="50" oninput="syncVal('area_terreno','area_terreno_v');calc()">
+          <div class="val-box" id="area_terreno_v">1,500 m²</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Gastos legales y registro <span class="hint">USD</span></label>
+        <input type="number" id="gastos_legales" value="8500" min="0" max="100000" step="500" oninput="calc()">
+      </div>
+    </div>
+  </div>
+
+  <!-- CONSTRUCCION -->
+  <div class="section-block">
+    <div class="section-title open" onclick="toggleSection(this)">
+      <span class="icon">🔨</span><span>Construcción</span><span class="toggle">▶</span>
+    </div>
+    <div class="section-body open">
+      <div class="field">
+        <label>Área a construir <span class="hint">m²</span></label>
+        <div class="field-row">
+          <input type="range" id="area_const" min="50" max="5000" value="634" step="10" oninput="syncVal('area_const','area_const_v');calc()">
+          <div class="val-box" id="area_const_v">634 m²</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>% Área vendible <span class="hint">del total construido</span></label>
+        <div class="field-row">
+          <input type="range" id="pct_vendible" min="50" max="100" value="85" step="1" oninput="syncVal('pct_vendible','pct_vendible_v','%');calc()">
+          <div class="val-box" id="pct_vendible_v">85%</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Costo construcción/m² <span class="hint">USD/m²</span></label>
+        <div class="field-row">
+          <input type="range" id="costo_m2" min="200" max="2500" value="750" step="25" oninput="syncVal('costo_m2','costo_m2_v','$/m²');calc()">
+          <div class="val-box" id="costo_m2_v">$750/m²</div>
+        </div>
+        <div class="presets">
+          <button class="preset-btn" onclick="setRange('costo_m2',350,'$350')">Económico</button>
+          <button class="preset-btn" onclick="setRange('costo_m2',750,'$750')">Estándar</button>
+          <button class="preset-btn" onclick="setRange('costo_m2',1200,'$1,200')">Premium</button>
+          <button class="preset-btn" onclick="setRange('costo_m2',2000,'$2,000')">Lujo</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Diseño + permisos <span class="hint">USD total</span></label>
+        <input type="number" id="diseno" value="30000" min="0" max="500000" step="1000" oninput="calc()">
+      </div>
+      <div class="field">
+        <label>Contingencia <span class="hint">% sobre construcción</span></label>
+        <div class="field-row">
+          <input type="range" id="contingencia" min="0" max="25" value="8" step="1" oninput="syncVal('contingencia','contingencia_v','%');calc()">
+          <div class="val-box" id="contingencia_v">8%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VENTAS -->
+  <div class="section-block">
+    <div class="section-title open" onclick="toggleSection(this)">
+      <span class="icon">💰</span><span>Ingresos y Ventas</span><span class="toggle">▶</span>
+    </div>
+    <div class="section-body open">
+      <div class="field">
+        <label>Precio de venta/m² <span class="hint">USD/m²</span></label>
+        <div class="field-row">
+          <input type="range" id="precio_m2" min="500" max="10000" value="3200" step="50" oninput="syncVal('precio_m2','precio_m2_v','$/m²');calc()">
+          <div class="val-box" id="precio_m2_v">$3,200/m²</div>
+        </div>
+        <div class="presets">
+          <button class="preset-btn" onclick="setRange('precio_m2',800,'$800')">Económico</button>
+          <button class="preset-btn" onclick="setRange('precio_m2',1800,'$1,800')">Medio</button>
+          <button class="preset-btn" onclick="setRange('precio_m2',3200,'$3,200')">Premium</button>
+          <button class="preset-btn" onclick="setRange('precio_m2',6000,'$6,000')">Lujo</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Número de unidades <span class="hint">a vender</span></label>
+        <div class="field-row">
+          <input type="range" id="unidades" min="1" max="100" value="1" step="1" oninput="syncVal('unidades','unidades_v','');calc()">
+          <div class="val-box" id="unidades_v">1</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Comisión de corredor <span class="hint">% s/venta</span></label>
+        <div class="field-row">
+          <input type="range" id="comision" min="0" max="15" value="6" step="0.5" oninput="syncVal('comision','comision_v','%');calc()">
+          <div class="val-box" id="comision_v">6%</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Marketing y publicidad <span class="hint">USD total</span></label>
+        <input type="number" id="marketing" value="15000" min="0" max="500000" step="1000" oninput="calc()">
+      </div>
+    </div>
+  </div>
+
+  <!-- FINANCIAMIENTO -->
+  <div class="section-block">
+    <div class="section-title" onclick="toggleSection(this)">
+      <span class="icon">🏦</span><span>Financiamiento</span><span class="toggle">▶</span>
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <label>Capital propio (equity) <span class="hint">%</span></label>
+        <div class="field-row">
+          <input type="range" id="equity_pct" min="10" max="100" value="40" step="5" oninput="syncVal('equity_pct','equity_pct_v','%');calc()">
+          <div class="val-box" id="equity_pct_v">40%</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Tasa de interés anual <span class="hint">%</span></label>
+        <div class="field-row">
+          <input type="range" id="tasa" min="4" max="20" value="8.5" step="0.5" oninput="syncVal('tasa','tasa_v','%');calc()">
+          <div class="val-box" id="tasa_v">8.5%</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Plazo del crédito <span class="hint">meses</span></label>
+        <div class="field-row">
+          <input type="range" id="plazo" min="6" max="120" value="24" step="6" oninput="syncVal('plazo','plazo_v',' meses');calc()">
+          <div class="val-box" id="plazo_v">24 m</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Tasa de descuento (WACC) <span class="hint">%</span></label>
+        <div class="field-row">
+          <input type="range" id="wacc" min="5" max="30" value="12" step="1" oninput="syncVal('wacc','wacc_v','%');calc()">
+          <div class="val-box" id="wacc_v">12%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="section-block">
+    <div class="section-title" onclick="toggleSection(this)">
+      <span class="icon">📅</span><span>Cronograma</span><span class="toggle">▶</span>
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <label>Duración construcción <span class="hint">meses</span></label>
+        <div class="field-row">
+          <input type="range" id="meses_const" min="3" max="36" value="10" step="1" oninput="syncVal('meses_const','meses_const_v',' m');calc()">
+          <div class="val-box" id="meses_const_v">10 m</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Inicio ventas (mes) <span class="hint">desde arranque</span></label>
+        <div class="field-row">
+          <input type="range" id="inicio_ventas" min="1" max="24" value="2" step="1" oninput="syncVal('inicio_ventas','inicio_ventas_v',' mes');calc()">
+          <div class="val-box" id="inicio_ventas_v">mes 2</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /input-panel -->
+
+<!-- ── RESULTS PANEL ── -->
+<div class="results-panel">
+<div class="results-inner">
+
+  <!-- KPIs -->
+  <div class="results-section-hdr">Resumen ejecutivo</div>
+  <div class="kpi-grid">
+    <div class="kpi gold">
+      <div class="kpi-label">Inversión Total</div>
+      <div class="kpi-value gold-v" id="kpi-inversion">$0</div>
+      <div class="kpi-sub" id="kpi-inv-sub">Capital + Deuda</div>
+    </div>
+    <div class="kpi" id="kpi-ingreso-card">
+      <div class="kpi-label">Ingreso Bruto</div>
+      <div class="kpi-value green" id="kpi-ingreso">$0</div>
+      <div class="kpi-sub" id="kpi-ing-sub">Precio × m² vendibles</div>
+    </div>
+    <div class="kpi" id="kpi-utilidad-card">
+      <div class="kpi-label">Utilidad Neta</div>
+      <div class="kpi-value" id="kpi-utilidad">$0</div>
+      <div class="kpi-sub">Ingreso − Inversión</div>
+    </div>
+    <div class="kpi" id="kpi-roi-card">
+      <div class="kpi-label">ROI del Proyecto</div>
+      <div class="kpi-value" id="kpi-roi">0%</div>
+      <div class="kpi-sub">Sobre inversión total</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="roi-bar" style="width:0%;background:var(--gold);"></div></div>
+    </div>
+  </div>
+
+  <!-- SECONDARY KPIs -->
+  <div class="kpi-grid" style="margin-bottom:20px;">
+    <div class="kpi">
+      <div class="kpi-label">Margen sobre ventas</div>
+      <div class="kpi-value gold-v" id="kpi-margen">0%</div>
+      <div class="kpi-sub">Utilidad / Ingreso neto</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">ROI Capital Propio</div>
+      <div class="kpi-value blue-v" id="kpi-roi-equity">0%</div>
+      <div class="kpi-sub">Efecto apalancamiento</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Precio de Equilibrio</div>
+      <div class="kpi-value gold-v" id="kpi-breakeven">$0/m²</div>
+      <div class="kpi-sub">Precio mínimo para no perder</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">VPN del Proyecto</div>
+      <div class="kpi-value" id="kpi-vpn">$0</div>
+      <div class="kpi-sub" id="kpi-vpn-sub">Al WACC configurado</div>
+    </div>
+  </div>
+
+  <!-- VIABILITY -->
+  <div class="results-section-hdr">Indicadores de viabilidad</div>
+  <div class="viability-row">
+    <div class="via-card">
+      <div class="via-dot" id="via-dot-1"></div>
+      <div>
+        <div class="via-label">ROI (mín. 15%)</div>
+        <div style="font-size:11px;color:var(--faint);" id="via-roi-val"></div>
+      </div>
+      <div class="via-result" id="via-roi">—</div>
+    </div>
+    <div class="via-card">
+      <div class="via-dot" id="via-dot-2"></div>
+      <div>
+        <div class="via-label">Margen (mín. 20%)</div>
+        <div style="font-size:11px;color:var(--faint);" id="via-margen-val"></div>
+      </div>
+      <div class="via-result" id="via-margen">—</div>
+    </div>
+    <div class="via-card">
+      <div class="via-dot" id="via-dot-3"></div>
+      <div>
+        <div class="via-label">VPN (mín. $0)</div>
+        <div style="font-size:11px;color:var(--faint);" id="via-vpn-val"></div>
+      </div>
+      <div class="via-result" id="via-vpn">—</div>
+    </div>
+  </div>
+
+  <!-- SCENARIOS -->
+  <div class="results-section-hdr">Escenarios (Pesimista / Base / Optimista)</div>
+  <div class="scen-grid">
+    <div class="scen-card pess">
+      <div class="scen-name">Pesimista −15%</div>
+      <div class="scen-roi" id="scen-pess-roi">0%</div>
+      <div class="scen-detail" id="scen-pess-detail">—</div>
+    </div>
+    <div class="scen-card base">
+      <div class="scen-name">Base (actual)</div>
+      <div class="scen-roi" id="scen-base-roi">0%</div>
+      <div class="scen-detail" id="scen-base-detail">—</div>
+    </div>
+    <div class="scen-card opt">
+      <div class="scen-name">Optimista +15%</div>
+      <div class="scen-roi" id="scen-opt-roi">0%</div>
+      <div class="scen-detail" id="scen-opt-detail">—</div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="results-section-hdr">Análisis visual</div>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Desglose de inversión</div>
+      <div class="chart-wrap"><canvas id="chart-costos"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Waterfall financiero</div>
+      <div class="chart-wrap"><canvas id="chart-waterfall"></canvas></div>
+    </div>
+    <div class="chart-card full">
+      <div class="chart-title">Flujo de caja acumulado (12 meses)</div>
+      <div class="chart-wrap-tall"><canvas id="chart-cashflow"></canvas></div>
+    </div>
+  </div>
+
+  <!-- SENSITIVITY TABLE -->
+  <div class="results-section-hdr">Análisis de sensibilidad — ROI por precio vs. costo</div>
+  <div class="chart-card" style="margin-bottom:24px;overflow-x:auto;">
+    <div id="sens-table-wrap"></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--muted);">
+      Verde ≥ 25% &nbsp;|&nbsp; Dorado 10–24% &nbsp;|&nbsp; Rojo &lt; 10% &nbsp;|&nbsp; <span style="background:var(--gold-p);padding:2px 6px;color:var(--gold);">Base actual</span>
+    </div>
+  </div>
+
+  <!-- BREAKDOWN TABLE -->
+  <div class="results-section-hdr">Detalle de costos</div>
+  <div class="chart-card" style="margin-bottom:32px;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;" id="breakdown-table">
+    </table>
+  </div>
+
+</div>
+</div><!-- /results-panel -->
+</div><!-- /layout -->
+
+<div class="toast" id="toast"><div class="tdot"></div><span id="toast-msg">Calculado</span></div>
+
+<script>
+// ── CHART INSTANCES ──
+let chartCostos, chartWaterfall, chartCashflow;
+const GOLD='#C9A96E',GREEN='#4CAF7D',RED='#E05555',BLUE='#4ABDE0',MUTED='#5F6368';
+
+// ── HELPERS ──
+const fmt = (n) => '$'+Math.abs(Math.round(n)).toLocaleString('en-US')+(n<0?' (neg)':'');
+const fmtS = (n) => (n<0?'-$':'$')+Math.abs(Math.round(n)).toLocaleString('en-US');
+const fmtP = (n) => (n*100).toFixed(1)+'%';
+const g = id => parseFloat(document.getElementById(id).value)||0;
+
+function syncVal(rangeId, displayId, suffix=''){
+  const v = document.getElementById(rangeId).value;
+  const num = parseFloat(v);
+  let display;
+  if(suffix==='$/m²') display = '$'+Math.round(num).toLocaleString('en-US')+'/m²';
+  else if(suffix==='%') display = num+'%';
+  else if(suffix===' meses'||suffix===' m') display = num+suffix;
+  else if(suffix===' mes') display = 'mes '+num;
+  else display = Math.round(num).toLocaleString('en-US')+suffix;
+  document.getElementById(displayId).textContent = display;
+}
+function setVal(id, v){ document.getElementById(id).value=v; calc(); }
+function setRange(id, v, label){
+  document.getElementById(id).value=v;
+  // find display
+  const displays={costo_m2:'costo_m2_v',precio_m2:'precio_m2_v'};
+  if(displays[id]) document.getElementById(displays[id]).textContent='$'+Math.round(v).toLocaleString()+'/m²';
+  calc();
+}
+function toggleSection(el){
+  const body=el.nextElementSibling;
+  el.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+// ── FINANCIAL CALCULATIONS ──
+function getInputs(){
+  return {
+    terreno: g('terreno'),
+    area_terreno: g('area_terreno'),
+    gastos_legales: g('gastos_legales'),
+    area_const: g('area_const'),
+    pct_vendible: g('pct_vendible')/100,
+    costo_m2: g('costo_m2'),
+    diseno: g('diseno'),
+    contingencia: g('contingencia')/100,
+    precio_m2: g('precio_m2'),
+    unidades: g('unidades'),
+    comision: g('comision')/100,
+    marketing: g('marketing'),
+    equity_pct: g('equity_pct')/100,
+    tasa: g('tasa')/100,
+    plazo: g('plazo'),
+    wacc: g('wacc')/100,
+    meses_const: g('meses_const'),
+    inicio_ventas: g('inicio_ventas'),
+  };
+}
+
+function computeProject(inp, priceAdj=1, costAdj=1){
+  const i = inp;
+  // COSTS
+  const cTerreno = i.terreno + i.gastos_legales;
+  const cConstruccion = i.area_const * i.costo_m2 * costAdj;
+  const cContingencia = cConstruccion * i.contingencia;
+  const cDiseno = i.diseno;
+  const cMarketing = i.marketing;
+  const debtPct = 1 - i.equity_pct;
+  const totalBeforeFinancing = cTerreno + cConstruccion + cContingencia + cDiseno + cMarketing;
+  const deuda = totalBeforeFinancing * debtPct;
+  const intereses = deuda * i.tasa * (i.plazo/12);
+  const totalInversion = totalBeforeFinancing + intereses;
+
+  // REVENUES
+  const areaVendible = i.area_const * i.pct_vendible;
+  const ingresoBruto = areaVendible * i.precio_m2 * priceAdj * i.unidades;
+  const cComision = ingresoBruto * i.comision;
+  const ingresoNeto = ingresoBruto - cComision;
+
+  // PROFITABILITY
+  const utilidad = ingresoNeto - totalInversion;
+  const roi = totalInversion > 0 ? utilidad / totalInversion : 0;
+  const margen = ingresoNeto > 0 ? utilidad / ingresoNeto : 0;
+  const roiEquity = (totalInversion * i.equity_pct) > 0 ? utilidad / (totalInversion * i.equity_pct) : 0;
+  const breakeven = areaVendible * i.unidades > 0 ? totalInversion / (areaVendible * i.unidades) : 0;
+
+  // CASH FLOWS (monthly, 12 periods)
+  const cashFlows = Array(13).fill(0);
+  cashFlows[0] = -(i.terreno + i.gastos_legales + intereses); // initial
+  for(let m=1;m<=Math.min(i.meses_const,12);m++){
+    cashFlows[m] -= (cConstruccion + cContingencia) / i.meses_const;
+    if(m<=2) cashFlows[m] -= cDiseno/2;
+    if(m>=4&&m<=11) cashFlows[m] -= cMarketing/8;
+    if(m>=i.inicio_ventas){
+      const salesMonths = 12 - i.inicio_ventas + 1;
+      cashFlows[m] += ingresoNeto / salesMonths;
+    }
+  }
+
+  // VPN
+  const waccMonthly = i.wacc/12;
+  const vpn = cashFlows.reduce((acc,cf,t)=>acc+cf/Math.pow(1+waccMonthly,t),0);
+
+  return {
+    cTerreno, cConstruccion, cContingencia, cDiseno, cMarketing,
+    deuda, intereses, totalInversion,
+    ingresoBruto, ingresoNeto, utilidad,
+    roi, margen, roiEquity, breakeven, vpn,
+    cashFlows, areaVendible, debtPct,
+    cComision,
+  };
+}
+
+// ── MAIN CALC ──
+function calc(){
+  const inp = getInputs();
+  const r = computeProject(inp);
+
+  // KPIs
+  document.getElementById('kpi-inversion').textContent = fmtS(r.totalInversion);
+  document.getElementById('kpi-ingreso').textContent = fmtS(r.ingresoBruto);
+  document.getElementById('kpi-utilidad').textContent = fmtS(r.utilidad);
+  document.getElementById('kpi-roi').textContent = fmtP(r.roi);
+  document.getElementById('kpi-margen').textContent = fmtP(r.margen);
+  document.getElementById('kpi-roi-equity').textContent = fmtP(r.roiEquity);
+  document.getElementById('kpi-breakeven').textContent = '$'+Math.round(r.breakeven).toLocaleString()+'/m²';
+  document.getElementById('kpi-vpn').textContent = fmtS(r.vpn);
+
+  // Color profit
+  const profEl = document.getElementById('kpi-utilidad');
+  profEl.className = 'kpi-value '+(r.utilidad>=0?'green':'red');
+  const roiEl = document.getElementById('kpi-roi');
+  roiEl.className = 'kpi-value '+(r.roi>=0.20?'green':r.roi>=0.10?'gold-v':'red');
+  const vpnEl = document.getElementById('kpi-vpn');
+  vpnEl.className = 'kpi-value '+(r.vpn>=0?'green':'red');
+
+  // ROI bar
+  const roiBar = Math.min(Math.max(r.roi*100,0),100);
+  document.getElementById('roi-bar').style.width = roiBar+'%';
+  document.getElementById('roi-bar').style.background = r.roi>=0.20?GREEN:r.roi>=0.10?GOLD:RED;
+
+  // Viability
+  function setVia(dotId, resultId, valId, ok, value){
+    const dot=document.getElementById(dotId);
+    const res=document.getElementById(resultId);
+    const val=document.getElementById(valId);
+    dot.style.background = ok?GREEN:RED;
+    res.textContent = ok?'✓ Viable':'⚠ Revisar';
+    res.style.color = ok?GREEN:RED;
+    val.textContent = value;
+  }
+  setVia('via-dot-1','via-roi','via-roi-val', r.roi>=0.15, fmtP(r.roi));
+  setVia('via-dot-2','via-margen','via-margen-val', r.margen>=0.20, fmtP(r.margen));
+  setVia('via-dot-3','via-vpn','via-vpn-val', r.vpn>=0, fmtS(r.vpn));
+
+  // SCENARIOS
+  const rPess = computeProject(inp, 0.85, 1.15);
+  const rOpt  = computeProject(inp, 1.15, 0.90);
+  function scen(roiId, detailId, rc){
+    document.getElementById(roiId).textContent = fmtP(rc.roi);
+    document.getElementById(detailId).innerHTML =
+      `Utilidad: ${fmtS(rc.utilidad)}<br>Inversión: ${fmtS(rc.totalInversion)}<br>VPN: ${fmtS(rc.vpn)}`;
+  }
+  scen('scen-pess-roi','scen-pess-detail',rPess);
+  scen('scen-base-roi','scen-base-detail',r);
+  scen('scen-opt-roi','scen-opt-detail',rOpt);
+
+  // CHARTS
+  updateChartCostos(r);
+  updateChartWaterfall(r);
+  updateChartCashflow(r, inp);
+  updateSensitivity(inp);
+  updateBreakdown(r);
+}
+
+// ── CHART: Cost Donut ──
+function updateChartCostos(r){
+  const labels=['Terreno','Construcción','Contingencia','Diseño/Permisos','Marketing','Intereses'];
+  const data=[r.cTerreno,r.cConstruccion,r.cContingencia,r.cDiseno,r.cMarketing,r.intereses];
+  const colors=[GOLD,'#C47A2A','#9B5A1A','#7A4A10','#5A3A08',MUTED];
+  if(chartCostos){chartCostos.data.datasets[0].data=data;chartCostos.update();return;}
+  chartCostos=new Chart(document.getElementById('chart-costos'),{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
+      plugins:{legend:{display:true,position:'right',labels:{color:'5F6368',font:{size:10},boxWidth:10,padding:8}},
+      tooltip:{callbacks:{label:d=>' '+fmtS(d.raw)}}}}
+  });
+}
+
+// ── CHART: Waterfall ──
+function updateChartWaterfall(r){
+  const inv=r.totalInversion, ing=r.ingresoNeto, util=r.utilidad;
+  const labels=['Inversión','Ingreso neto','Utilidad'];
+  const data=[inv, ing, util];
+  const colors=[RED, BLUE, util>=0?GREEN:RED];
+  if(chartWaterfall){
+    chartWaterfall.data.datasets[0].data=data;
+    chartWaterfall.data.datasets[0].backgroundColor=colors;
+    chartWaterfall.update();return;
+  }
+  chartWaterfall=new Chart(document.getElementById('chart-waterfall'),{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:2,barPercentage:0.5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:d=>' '+fmtS(d.raw)}}},
+      scales:{x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:MUTED}},
+               y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'5F6368',callback:v=>'$'+Math.round(v/1000)+'K'}}}}
+  });
+}
+
+// ── CHART: Cash Flow ──
+function updateChartCashflow(r, inp){
+  const months=['Inicio',...Array.from({length:12},(_,i)=>'M'+(i+1))];
+  const cumulative=[];let acc=0;
+  r.cashFlows.forEach(cf=>{acc+=cf;cumulative.push(acc);});
+  const monthly=r.cashFlows.map(cf=>cf);
+  if(chartCashflow){
+    chartCashflow.data.datasets[0].data=cumulative;
+    chartCashflow.data.datasets[1].data=monthly;
+    chartCashflow.update();return;
+  }
+  chartCashflow=new Chart(document.getElementById('chart-cashflow'),{
+    type:'bar',
+    data:{labels:months,datasets:[
+      {type:'line',label:'Acumulado',data:cumulative,borderColor:GOLD,backgroundColor:'rgba(201,169,110,0.08)',borderWidth:2,pointRadius:3,pointBackgroundColor:GOLD,fill:true,tension:0.3,yAxisID:'y'},
+      {type:'bar',label:'Flujo mensual',data:monthly,backgroundColor:monthly.map(v=>v>=0?'rgba(76,175,125,0.6)':'rgba(224,85,85,0.6)'),borderRadius:2,yAxisID:'y'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'5F6368',font:{size:10}}},
+        tooltip:{callbacks:{label:d=>' '+fmtS(d.raw)}}},
+      scales:{x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'5F6368',font:{size:10}}},
+               y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'5F6368',callback:v=>'$'+Math.round(v/1000)+'K'}}}}
+  });
+}
+
+// ── SENSITIVITY TABLE ──
+function updateSensitivity(inp){
+  const priceVars = [0.30,0.20,0.10,0,'−10%','−20%'];
+  const priceAdjs = [1.30,1.20,1.10,1.0,0.90,0.80];
+  const costVars  = ['−20%','−10%','Base','+10%','+20%','+30%'];
+  const costAdjs  = [0.80, 0.90, 1.0, 1.10, 1.20, 1.30];
+
+  let html=`<table class="sens-table"><thead><tr><th class="row-hdr">Precio ↓ / Costo →</th>`;
+  costVars.forEach(c=>html+=`<th>${c}</th>`);
+  html+='</tr></thead><tbody>';
+
+  priceAdjs.forEach((pa,pi)=>{
+    const pLabel = typeof priceVars[pi]==='number'
+      ? (priceVars[pi]===0?'Base':'+'+Math.round(priceVars[pi]*100)+'%')
+      : priceVars[pi];
+    html+=`<tr><td class="row-hdr">${pLabel}</td>`;
+    costAdjs.forEach((ca,ci)=>{
+      const r2 = computeProject(inp,pa,ca);
+      const roi = r2.roi;
+      const cls = (pa===1.0&&ca===1.0)?'base-cell':roi>=0.25?'good-cell':roi>=0.10?'mid-cell':'bad-cell';
+      html+=`<td class="${cls}">${fmtP(roi)}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  document.getElementById('sens-table-wrap').innerHTML=html;
+}
+
+// ── BREAKDOWN TABLE ──
+function updateBreakdown(r){
+  const rows=[
+    ['Terreno + escritura',r.cTerreno,true],
+    ['Construcción ('+g('area_const')+'m² × $'+g('costo_m2')+'/m²)',r.cConstruccion,false],
+    ['Contingencia ('+g('contingencia')+'%)',r.cContingencia,false],
+    ['Diseño, arquitectura y permisos',r.cDiseno,false],
+    ['Marketing y publicidad',r.cMarketing,false],
+    ['Intereses del crédito',r.intereses,false],
+    ['INVERSIÓN TOTAL',r.totalInversion,true,'bold'],
+    ['Área vendible',r.areaVendible+' m²',false,'units'],
+    ['Ingreso bruto',r.ingresoBruto,false],
+    ['Comisión corredor',r.cComision,false],
+    ['INGRESO NETO',r.ingresoNeto,false,'bold'],
+    ['UTILIDAD NETA',r.utilidad,true,'bold-color'],
+  ];
+  let html='';
+  rows.forEach(([label,val,hdr,type])=>{
+    const isNum = typeof val==='number';
+    const display = type==='units' ? val : (isNum?fmtS(val):'—');
+    const rowBg = hdr?'background:rgba(201,169,110,0.06);':'';
+    const fontW = type&&type.startsWith('bold')?'font-weight:500;':'';
+    const color = type==='bold-color'?(val>=0?'color:'+GREEN:';color:'+RED):'';
+    html+=`<tr style="${rowBg}">
+      <td style="padding:10px 14px;font-size:13px;border-bottom:1px solid var(--dim);${fontW}">${label}</td>
+      <td style="padding:10px 14px;font-size:13px;border-bottom:1px solid var(--dim);text-align:right;${fontW}${color}">${display}</td>
+    </tr>`;
+  });
+  document.getElementById('breakdown-table').innerHTML=html;
+}
+
+// ── RESET ──
+function resetAll(){
+  const defaults={terreno:250000,area_terreno:1500,gastos_legales:8500,area_const:634,pct_vendible:85,costo_m2:750,diseno:30000,contingencia:8,precio_m2:3200,unidades:1,comision:6,marketing:15000,equity_pct:40,tasa:8.5,plazo:24,wacc:12,meses_const:10,inicio_ventas:2};
+  Object.entries(defaults).forEach(([k,v])=>{const el=document.getElementById(k);if(el)el.value=v;});
+  syncVal('area_terreno','area_terreno_v',' m²');
+  syncVal('area_const','area_const_v',' m²');
+  syncVal('pct_vendible','pct_vendible_v','%');
+  syncVal('costo_m2','costo_m2_v','$/m²');
+  syncVal('contingencia','contingencia_v','%');
+  syncVal('precio_m2','precio_m2_v','$/m²');
+  syncVal('unidades','unidades_v','');
+  syncVal('comision','comision_v','%');
+  syncVal('equity_pct','equity_pct_v','%');
+  syncVal('tasa','tasa_v','%');
+  syncVal('plazo','plazo_v',' meses');
+  syncVal('wacc','wacc_v','%');
+  syncVal('meses_const','meses_const_v',' m');
+  syncVal('inicio_ventas','inicio_ventas_v',' mes');
+  calc();
+  showToast('Variables reiniciadas al caso base');
+}
+
+function exportReport(){
+  showToast('Para exportar: Ctrl+P → Guardar como PDF');
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// INIT
+window.addEventListener('load',()=>{
+  syncVal('area_terreno','area_terreno_v',' m²');
+  syncVal('area_const','area_const_v',' m²');
+  syncVal('pct_vendible','pct_vendible_v','%');
+  syncVal('costo_m2','costo_m2_v','$/m²');
+  syncVal('contingencia','contingencia_v','%');
+  syncVal('precio_m2','precio_m2_v','$/m²');
+  syncVal('unidades','unidades_v','');
+  syncVal('comision','comision_v','%');
+  syncVal('equity_pct','equity_pct_v','%');
+  syncVal('tasa','tasa_v','%');
+  syncVal('plazo','plazo_v',' meses');
+  syncVal('wacc','wacc_v','%');
+  syncVal('meses_const','meses_const_v',' m');
+  syncVal('inicio_ventas','inicio_ventas_v',' mes');
+  calc();
+});
+</script>
+</body>
+</html>
