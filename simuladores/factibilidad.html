@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RED Feasibility Simulator — RED ACADEMY</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#9B7A45;--gold-l:#C8A857;--gold-d:#7A5C2E;--gold-p:rgba(155,122,69,0.10);
+  --bg:#FFFFFF;--bg2:#F8F9FA;--bg3:#F0F2F5;--bg4:#E8EAED;--bg5:#DFE1E5;
+  --text:#111B21;--muted:#5F6368;--faint:#D3D6DA;
+  --dim:rgba(0,0,0,0.08);--b:rgba(0,0,0,0.14);
+  --green:#1E8E3E;--green-p:rgba(30,142,62,0.08);
+  --red:#D93025;--red-p:rgba(217,48,37,0.08);
+  --blue:#1A73E8;--orange:#E37400;
+}
+body{background:#FFFFFF;color:var(--text);font-family:'Outfit',sans-serif;font-weight:300;min-height:100vh;}
+/* NAV */
+.nav{height:56px;background:#FFFFFF;border-bottom:1px solid #E0E0E0;box-shadow:0 1px 3px rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:200;}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;letter-spacing:.12em;color:var(--gold);}
+.nav-logo span{color:var(--text);font-weight:300;}
+.nav-badge{font-size:9px;letter-spacing:.2em;text-transform:uppercase;background:var(--gold-p);color:var(--gold);padding:4px 12px;border:1px solid var(--b);}
+.nav-actions{display:flex;gap:10px;}
+.btn{padding:8px 18px;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:'Outfit',sans-serif;border:none;transition:all .2s;}
+.btn-gold{background:var(--gold);color:#080808;}
+.btn-gold:hover{background:var(--gold-l);}
+.btn-out{background:transparent;border:1px solid var(--b);color:var(--muted);}
+.btn-out:hover{border-color:var(--gold);color:var(--gold);}
+
+/* HERO HEADER */
+.hero{background:#F8F9FA;border-bottom:1px solid #E0E0E0;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:20px;}
+.hero-text h1{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,3vw,36px);font-weight:300;line-height:1.1;}
+.hero-text h1 em{font-style:italic;color:var(--gold);}
+.hero-text p{font-size:13px;color:var(--muted);margin-top:6px;max-width:560px;line-height:1.6;}
+.hero-quote{background:#F0F2F5;border:1px solid var(--b);padding:14px 20px;max-width:360px;flex-shrink:0;}
+.hero-quote p{font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;color:var(--gold-l);line-height:1.6;}
+.hero-quote span{display:block;font-size:10px;color:var(--muted);margin-top:6px;font-family:'Outfit',sans-serif;font-style:normal;letter-spacing:.1em;}
+
+/* MAIN LAYOUT */
+.app{display:grid;grid-template-columns:520px 1fr;gap:0;min-height:calc(100vh - 130px);}
+
+/* INPUT PANEL */
+.input-panel{background:#FFFFFF;border-right:1px solid #E0E0E0;overflow-y:auto;height:calc(100vh - 130px);position:sticky;top:56px;}
+.input-tabs{display:flex;border-bottom:1px solid var(--dim);background:#FFFFFF;}
+.itab{flex:1;padding:12px 4px;text-align:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:transparent;border-top:none;border-left:none;border-right:none;font-family:'Outfit',sans-serif;}
+.itab:hover{color:var(--text);}
+.itab.active{color:var(--gold);border-bottom-color:var(--gold);background:#FFF8F0;}
+.tab-icon{display:block;font-size:16px;margin-bottom:3px;}
+
+.tab-panel{display:none;padding:20px 22px;background:#FFFFFF;}
+.tab-panel.active{display:block;}
+
+/* FIELDS */
+.field-group{margin-bottom:18px;}
+.field-group label{display:flex;align-items:center;justify-content:space-between;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.field-group label .hint{font-size:10px;color:var(--faint);text-transform:none;letter-spacing:0;font-weight:300;}
+.field-group input[type=number],.field-group select,.field-group input[type=text]{width:100%;background:#F0F2F5;border:1px solid #DADCE0;color:var(--text);padding:10px 13px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;transition:border-color .2s;-moz-appearance:textfield;}
+.field-group input:focus,.field-group select:focus{border-color:var(--gold);}
+.field-group select{cursor:pointer;}
+.field-group select option{background:#F0F2F5;}
+.field-group input::-webkit-outer-spin-button,.field-group input::-webkit-inner-spin-button{-webkit-appearance:none;}
+
+.range-group{margin-bottom:18px;}
+.range-group label{display:flex;align-items:center;justify-content:space-between;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.range-row{display:grid;grid-template-columns:1fr 72px;gap:10px;align-items:center;}
+.range-group input[type=range]{width:100%;accent-color:var(--gold);cursor:pointer;}
+.val-badge{background:#F0F2F5;border:1px solid #DADCE0;padding:7px 8px;font-size:12px;font-weight:500;color:var(--gold);text-align:center;white-space:nowrap;}
+
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.section-sep{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#9B7A45;padding:10px 0 6px;border-bottom:2px solid #FFF0D9;margin-bottom:14px;}
+
+.radio-group{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:18px;}
+.radio-opt{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#F0F2F5;border:1px solid #DADCE0;cursor:pointer;transition:all .2s;}
+.radio-opt:hover{border-color:var(--b);}
+.radio-opt.active{border-color:#9B7A45;background:#FFF8F0;}
+.radio-opt input{display:none;}
+.radio-opt span{font-size:12px;color:var(--muted);}
+.radio-opt.active span{color:var(--gold);}
+.radio-icon{font-size:18px;}
+
+.conditional{display:none;}
+.conditional.show{display:block;}
+
+.presets{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap;}
+.preset{padding:4px 9px;font-size:10px;background:#E8EAED;border:1px solid #DADCE0;color:var(--muted);cursor:pointer;transition:all .15s;font-family:'Outfit',sans-serif;}
+.preset:hover{border-color:var(--gold);color:var(--gold);}
+
+/* RESULTS PANEL */
+.results-panel{overflow-y:auto;height:calc(100vh - 130px);background:#F8F9FA;}
+.results-inner{padding:24px 28px;}
+
+/* LIVE TICKER */
+.ticker{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;}
+.tick{background:#F8F9FA;border:1px solid #DADCE0;padding:14px 16px;transition:border-color .3s;}
+.tick.good{border-color:rgba(76,175,125,.3);}
+.tick.warn{border-color:rgba(212,129,58,.3);}
+.tick.bad{border-color:rgba(224,85,85,.3);}
+.tick-label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.tick-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;line-height:1;}
+.tick-val.gold{color:var(--gold);}
+.tick-val.green{color:var(--green);}
+.tick-val.red{color:var(--red);}
+.tick-val.blue{color:var(--blue);}
+.tick-val.orange{color:var(--orange);}
+.tick-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.tick-bar{height:3px;background:#D3D6DA;margin-top:8px;}
+.tick-fill{height:100%;transition:width .5s,background .3s;}
+
+/* VIABILITY BANNER */
+.via-banner{padding:18px 22px;margin-bottom:20px;border:1px solid #DADCE0;display:flex;align-items:flex-start;gap:16px;position:relative;overflow:hidden;}
+.via-icon{font-size:36px;flex-shrink:0;margin-top:2px;}
+.via-label{font-size:9px;letter-spacing:.25em;text-transform:uppercase;margin-bottom:4px;}
+.via-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;margin-bottom:6px;}
+.via-desc{font-size:13px;color:var(--muted);line-height:1.7;}
+.via-score{position:absolute;right:20px;top:18px;font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300;opacity:.15;}
+
+/* SECTION HEADER */
+.sec-hdr{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:10px;margin-top:8px;}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--dim);}
+
+/* METRICS TABLE */
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#E0E0E0;margin-bottom:20px;}
+.metric-row{background:#FFFFFF;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;}
+.metric-name{font-size:12px;color:var(--muted);}
+.metric-val{font-size:13px;font-weight:500;color:var(--text);}
+.metric-val.g{color:var(--green);}
+.metric-val.r{color:var(--red);}
+.metric-val.gd{color:var(--gold);}
+
+/* SCENARIOS */
+.scen-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.scen{padding:14px 16px;border:1px solid #DADCE0;}
+.scen-name{font-size:9px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;}
+.scen.pess .scen-name{color:var(--red);}
+.scen.base .scen-name{color:var(--gold);}
+.scen.opt .scen-name{color:var(--green);}
+.scen.base{border-color:var(--b);}
+.scen-roi{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;line-height:1;}
+.scen.pess .scen-roi{color:var(--red);}
+.scen.base .scen-roi{color:var(--gold);}
+.scen.opt .scen-roi{color:var(--green);}
+.scen-detail{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6;}
+
+/* CHARTS */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.chart-card{background:#F8F9FA;border:1px solid #DADCE0;padding:16px;}
+.chart-card.full{grid-column:1/-1;}
+.chart-title{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+.chart-wrap{position:relative;height:200px;}
+.chart-wrap-sm{position:relative;height:160px;}
+
+/* SENSITIVITY */
+.sens-wrap{overflow-x:auto;margin-bottom:20px;}
+.sens-table{width:100%;border-collapse:collapse;font-size:11px;}
+.sens-table th,.sens-table td{padding:7px 10px;text-align:center;border:1px solid #DADCE0;}
+.sens-table th{background:#F0F2F5;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:400;}
+.sens-table .row-hdr{text-align:left;color:var(--muted);font-size:10px;}
+.good-c{color:#1E8E3E;background:rgba(30,142,62,.08);}
+.mid-c{color:#9B7A45;background:rgba(155,122,69,.10);}
+.bad-c{color:#D93025;background:rgba(217,48,37,.08);}
+.base-c{background:#FFF3CD;color:#9B7A45;font-weight:600;border:1px solid #9B7A45;}
+
+/* INSIGHTS */
+.insights{margin-bottom:20px;}
+.insight-card{background:#F8F9FA;border:1px solid #DADCE0;padding:16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;}
+.insight-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+.insight-title{font-size:12px;font-weight:500;margin-bottom:4px;}
+.insight-text{font-size:12px;color:var(--muted);line-height:1.7;}
+.insight-badge{display:inline-block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;margin-top:6px;}
+
+/* BREAK-EVEN */
+.be-visual{background:#F8F9FA;border:1px solid #DADCE0;padding:16px;margin-bottom:20px;}
+.be-bar-wrap{background:#D3D6DA;height:20px;margin:12px 0 6px;position:relative;overflow:hidden;}
+.be-bar-fill{height:100%;background:var(--gold);transition:width .5s;}
+.be-bar-sold{height:100%;background:var(--green);position:absolute;top:0;left:0;transition:width .5s;}
+.be-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+
+/* TOAST */
+.toast{position:fixed;bottom:16px;right:16px;background:#F0F2F5;border:1px solid var(--b);padding:12px 18px;font-size:12px;display:flex;align-items:center;gap:8px;z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:#F0F2F5;}
+::-webkit-scrollbar-thumb{background:#BDC1C6;}
+
+@media(max-width:1000px){.app{grid-template-columns:1fr;}.input-panel,.results-panel{height:auto;position:static;overflow:visible;}.ticker{grid-template-columns:repeat(2,1fr);}.scen-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="nav-logo">RED <span>ACADEMY</span></div>
+    <div class="nav-badge">RED Feasibility Simulator</div>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-out" onclick="resetAll()">↺ Reiniciar</button>
+    <button class="btn btn-gold" onclick="window.print()">Exportar PDF</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-text">
+    <h1>Simulador <em>RED de Factibilidad</em> Inmobiliaria</h1>
+    <p>Antes de comprar un terreno, analiza si el proyecto genera utilidad. Ingresa los datos de tu proyecto y descubre si es viable, riesgoso o no recomendable — en tiempo real.</p>
+  </div>
+  <div class="hero-quote">
+    <p>"Este simulador te ayuda a pensar como un desarrollador inmobiliario profesional. Cada número que ingresas tiene consecuencias reales en la rentabilidad del proyecto."</p>
+    <span>— Módulo Premium · Capítulo 1 · RED Academy</span>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app">
+
+<!-- ═══════════════════════════════════════ INPUT PANEL ═══ -->
+<div class="input-panel">
+  <div class="input-tabs">
+    <button class="itab active" onclick="switchTab(0,this)"><span class="tab-icon">🏗</span>Terreno</button>
+    <button class="itab" onclick="switchTab(1,this)"><span class="tab-icon">🏢</span>Proyecto</button>
+    <button class="itab" onclick="switchTab(2,this)"><span class="tab-icon">💸</span>Costos</button>
+    <button class="itab" onclick="switchTab(3,this)"><span class="tab-icon">💰</span>Ingresos</button>
+  </div>
+
+  <!-- TAB 1: TERRENO -->
+  <div class="tab-panel active" id="tab-0">
+    <div class="section-sep">Adquisición del terreno</div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Precio del terreno <span class="hint">USD</span></label>
+        <input type="number" id="precio_terreno" value="250000" step="5000" oninput="calc()">
+        <div class="presets">
+          <span class="preset" onclick="setV('precio_terreno',50000)">$50K</span>
+          <span class="preset" onclick="setV('precio_terreno',150000)">$150K</span>
+          <span class="preset" onclick="setV('precio_terreno',250000)">$250K</span>
+          <span class="preset" onclick="setV('precio_terreno',500000)">$500K</span>
+          <span class="preset" onclick="setV('precio_terreno',1000000)">$1M</span>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Área del lote <span class="hint">m²</span></label>
+        <input type="number" id="area_lote" value="1500" step="50" oninput="calc()">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Frente del lote <span class="hint">m</span></label>
+        <input type="number" id="frente" value="30" step="1" oninput="calc()">
+      </div>
+      <div class="field-group">
+        <label>Fondo del lote <span class="hint">m</span></label>
+        <input type="number" id="fondo" value="50" step="1" oninput="calc()">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Zonificación</label>
+        <select id="zonificacion" onchange="calc()">
+          <option value="residencial">Residencial</option>
+          <option value="comercial">Comercial</option>
+          <option value="mixto">Mixto (residencial + comercial)</option>
+          <option value="hotelero">Hotelero / Turístico</option>
+          <option value="industrial">Industrial</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Densidad máxima <span class="hint">m² construibles/m² lote</span></label>
+        <input type="number" id="densidad" value="2.5" step="0.1" oninput="calc()">
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Topografía del terreno</label>
+      <div class="radio-group" id="topo-group">
+        <label class="radio-opt active" onclick="selectRadio('topo','plano',this)">
+          <input type="radio" name="topo" value="plano" checked>
+          <span class="radio-icon">🟰</span><span>Plano (+0%)</span>
+        </label>
+        <label class="radio-opt" onclick="selectRadio('topo','leve',this)">
+          <input type="radio" name="topo" value="leve">
+          <span class="radio-icon">📐</span><span>Pendiente leve (+8%)</span>
+        </label>
+        <label class="radio-opt" onclick="selectRadio('topo','moderado',this)">
+          <input type="radio" name="topo" value="moderado">
+          <span class="radio-icon">⛰</span><span>Pendiente moderada (+15%)</span>
+        </label>
+        <label class="radio-opt" onclick="selectRadio('topo','accidentado',this)">
+          <input type="radio" name="topo" value="accidentado">
+          <span class="radio-icon">🏔</span><span>Accidentado (+28%)</span>
+        </label>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Gastos de escritura, registro y legal <span class="hint">USD</span></label>
+      <input type="number" id="gastos_legales" value="9500" step="500" oninput="calc()">
+    </div>
+    <div class="field-group">
+      <label>Estudios técnicos (topografía, suelo, ambiental) <span class="hint">USD</span></label>
+      <input type="number" id="estudios" value="5000" step="500" oninput="calc()">
+    </div>
+    <button class="btn btn-gold" style="width:100%;margin-top:6px;" onclick="switchTab(1,document.querySelectorAll('.itab')[1])">Siguiente: Datos del proyecto →</button>
+  </div>
+
+  <!-- TAB 2: PROYECTO -->
+  <div class="tab-panel" id="tab-1">
+    <div class="section-sep">Tipo de proyecto</div>
+    <div class="field-group">
+      <label>Tipo de proyecto</label>
+      <div class="radio-group" id="tipo-group">
+        <label class="radio-opt active" onclick="selectRadio('tipo','casas',this);showProjectType()">
+          <input type="radio" name="tipo" value="casas" checked><span class="radio-icon">🏠</span><span>Casas</span>
+        </label>
+        <label class="radio-opt" onclick="selectRadio('tipo','apartamentos',this);showProjectType()">
+          <input type="radio" name="tipo" value="apartamentos"><span class="radio-icon">🏢</span><span>Apartamentos</span>
+        </label>
+        <label class="radio-opt" onclick="selectRadio('tipo','locales',this);showProjectType()">
+          <input type="radio" name="tipo" value="locales"><span class="radio-icon">🏪</span><span>Locales</span>
+        </label>
+        <label class="radio-opt" onclick="selectRadio('tipo','hotel',this);showProjectType()">
+          <input type="radio" name="tipo" value="hotel"><span class="radio-icon">🏨</span><span>Hotel / STR</span>
+        </label>
+        <label class="radio-opt" onclick="selectRadio('tipo','villa',this);showProjectType()">
+          <input type="radio" name="tipo" value="villa"><span class="radio-icon">🏖</span><span>Villa de lujo</span>
+        </label>
+        <label class="radio-opt" onclick="selectRadio('tipo','mixto',this);showProjectType()">
+          <input type="radio" name="tipo" value="mixto"><span class="radio-icon">🏗</span><span>Mixto</span>
+        </label>
+      </div>
+    </div>
+    <div class="section-sep">Dimensiones</div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Número de unidades</label>
+        <input type="number" id="unidades" value="1" min="1" step="1" oninput="calc()">
+        <div class="presets">
+          <span class="preset" onclick="setV('unidades',1)">1</span>
+          <span class="preset" onclick="setV('unidades',4)">4</span>
+          <span class="preset" onclick="setV('unidades',12)">12</span>
+          <span class="preset" onclick="setV('unidades',24)">24</span>
+          <span class="preset" onclick="setV('unidades',48)">48</span>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>m² por unidad <span class="hint">área construida</span></label>
+        <input type="number" id="m2_unidad" value="634" step="10" oninput="calc()">
+      </div>
+    </div>
+    <div class="range-group">
+      <label>% Área vendible del total construido <span id="pct_v_lbl" style="color:var(--gold);">85%</span></label>
+      <div class="range-row">
+        <input type="range" id="pct_vendible" min="50" max="100" value="85" oninput="syncR('pct_vendible','pct_v_lbl','%');calc()">
+        <div class="val-badge" id="pct_vendible_v">85%</div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Meses de construcción</label>
+      <input type="number" id="meses_const" value="10" min="1" step="1" oninput="calc()">
+      <div class="presets">
+        <span class="preset" onclick="setV('meses_const',6)">6m</span>
+        <span class="preset" onclick="setV('meses_const',10)">10m</span>
+        <span class="preset" onclick="setV('meses_const',14)">14m</span>
+        <span class="preset" onclick="setV('meses_const',18)">18m</span>
+        <span class="preset" onclick="setV('meses_const',24)">24m</span>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Tipo de ingreso esperado</label>
+      <select id="tipo_ingreso" onchange="showIncomeType();calc()">
+        <option value="venta">Venta directa</option>
+        <option value="alquiler">Renta mensual (largo plazo)</option>
+        <option value="str">Renta corta (STR / Airbnb)</option>
+        <option value="mixto">Mixto (venta + renta)</option>
+      </select>
+    </div>
+    <button class="btn btn-gold" style="width:100%;margin-top:10px;" onclick="switchTab(2,document.querySelectorAll('.itab')[2])">Siguiente: Costos →</button>
+  </div>
+
+  <!-- TAB 3: COSTOS -->
+  <div class="tab-panel" id="tab-2">
+    <div class="section-sep">Construcción</div>
+    <div class="field-group">
+      <label>Costo de construcción base por m² <span class="hint">USD/m²</span></label>
+      <input type="number" id="costo_m2" value="750" step="25" oninput="calc()">
+      <div class="presets">
+        <span class="preset" onclick="setV('costo_m2',350)">Económico $350</span>
+        <span class="preset" onclick="setV('costo_m2',600)">Estándar $600</span>
+        <span class="preset" onclick="setV('costo_m2',900)">Premium $900</span>
+        <span class="preset" onclick="setV('costo_m2',1500)">Lujo $1,500</span>
+      </div>
+    </div>
+    <div class="section-sep">Gastos directos adicionales</div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Diseño, arquitectura e ingeniería <span class="hint">USD</span></label>
+        <input type="number" id="diseno" value="18000" step="1000" oninput="calc()">
+      </div>
+      <div class="field-group">
+        <label>Permisos y conexiones <span class="hint">USD</span></label>
+        <input type="number" id="permisos" value="12000" step="500" oninput="calc()">
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Amueblado / equipamiento (si aplica) <span class="hint">USD</span></label>
+      <input type="number" id="amueblado" value="0" step="1000" oninput="calc()">
+    </div>
+    <div class="section-sep">Financiamiento bancario</div>
+    <div class="range-group">
+      <label>% Financiado con banco <span id="fin_lbl" style="color:var(--gold);">60%</span></label>
+      <div class="range-row">
+        <input type="range" id="financiamiento_pct" min="0" max="90" value="60" oninput="syncR('financiamiento_pct','fin_lbl','%');calc()">
+        <div class="val-badge" id="financiamiento_pct_v">60%</div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Tasa interés anual <span class="hint">%</span></label>
+        <input type="number" id="tasa_anual" value="8.5" step="0.5" oninput="calc()">
+      </div>
+      <div class="field-group">
+        <label>Gastos bancarios fijos <span class="hint">USD</span></label>
+        <input type="number" id="gastos_bancarios" value="8500" step="500" oninput="calc()">
+      </div>
+    </div>
+    <div class="section-sep">Costos comerciales y operativos</div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Comisión de venta <span class="hint">%</span></label>
+        <input type="number" id="comision_pct" value="6" step="0.5" oninput="calc()">
+      </div>
+      <div class="field-group">
+        <label>Marketing y publicidad <span class="hint">USD</span></label>
+        <input type="number" id="marketing" value="15000" step="1000" oninput="calc()">
+      </div>
+    </div>
+    <div class="range-group">
+      <label>Imprevistos / contingencia <span id="imp_lbl" style="color:var(--gold);">8%</span></label>
+      <div class="range-row">
+        <input type="range" id="imprevistos_pct" min="0" max="25" value="8" oninput="syncR('imprevistos_pct','imp_lbl','%');calc()">
+        <div class="val-badge" id="imprevistos_pct_v">8%</div>
+      </div>
+    </div>
+    <button class="btn btn-gold" style="width:100%;margin-top:10px;" onclick="switchTab(3,document.querySelectorAll('.itab')[3])">Siguiente: Ingresos →</button>
+  </div>
+
+  <!-- TAB 4: INGRESOS -->
+  <div class="tab-panel" id="tab-3">
+    <div class="section-sep">Ingreso por venta</div>
+    <div class="field-group">
+      <label>Precio de venta por m² <span class="hint">USD/m²</span></label>
+      <input type="number" id="precio_m2" value="3200" step="50" oninput="calc()">
+      <div class="presets">
+        <span class="preset" onclick="setV('precio_m2',800)">$800 económico</span>
+        <span class="preset" onclick="setV('precio_m2',1800)">$1,800 medio</span>
+        <span class="preset" onclick="setV('precio_m2',3200)">$3,200 premium</span>
+        <span class="preset" onclick="setV('precio_m2',6000)">$6,000 lujo</span>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Precio de venta por unidad <span class="hint">USD (override)</span></label>
+        <input type="number" id="precio_unidad_override" value="0" step="5000" placeholder="0 = auto" oninput="calc()">
+      </div>
+      <div class="field-group">
+        <label>Preventas confirmadas <span class="hint">% del total</span></label>
+        <input type="number" id="preventa_pct" value="0" min="0" max="100" step="5" oninput="calc()">
+      </div>
+    </div>
+
+    <div class="section-sep">Ingreso por renta (si aplica)</div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Alquiler mensual por unidad <span class="hint">USD/mes</span></label>
+        <input type="number" id="alquiler_mensual" value="0" step="100" placeholder="0 = no aplica" oninput="calc()">
+      </div>
+      <div class="field-group">
+        <label>Ocupación estimada <span class="hint">%</span></label>
+        <input type="number" id="ocupacion_pct" value="75" min="0" max="100" step="5" oninput="calc()">
+      </div>
+    </div>
+
+    <div class="section-sep">Renta corta / STR (Airbnb)</div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Tarifa por noche <span class="hint">USD/noche</span></label>
+        <input type="number" id="tarifa_noche" value="0" step="50" placeholder="0 = no aplica" oninput="calc()">
+      </div>
+      <div class="field-group">
+        <label>Noches ocupadas/mes <span class="hint">promedio</span></label>
+        <input type="number" id="noches_mes" value="18" min="0" max="31" step="1" oninput="calc()">
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Valor de reventa proyectada a 5 años <span class="hint">USD</span></label>
+      <input type="number" id="valor_reventa" value="0" step="10000" placeholder="0 = no aplica" oninput="calc()">
+    </div>
+
+    <div style="background:#F0F2F5;border:1px solid var(--b);padding:14px;margin-top:10px;">
+      <div style="font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">Precio de venta calculado</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold);" id="precio_calc_display">$0</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="precio_calc_sub">Área vendible × precio/m² × unidades</div>
+    </div>
+  </div>
+</div><!-- /input-panel -->
+
+<!-- ═══════════════════════════════════════ RESULTS PANEL ═══ -->
+<div class="results-panel">
+<div class="results-inner">
+
+  <!-- VIABILITY BANNER -->
+  <div class="via-banner" id="via-banner">
+    <div class="via-icon" id="via-icon">⏳</div>
+    <div style="flex:1">
+      <div class="via-label" id="via-label">Analizando...</div>
+      <div class="via-title" id="via-title">Ingresa los datos del proyecto</div>
+      <div class="via-desc" id="via-desc">El simulador calculará automáticamente la viabilidad de tu proyecto.</div>
+    </div>
+    <div class="via-score" id="via-score">—</div>
+  </div>
+
+  <!-- LIVE KPIS -->
+  <div class="sec-hdr">Dashboard financiero en tiempo real</div>
+  <div class="ticker">
+    <div class="tick" id="kpi-inv">
+      <div class="tick-label">Inversión Total</div>
+      <div class="tick-val gold" id="kpi-inv-v">$0</div>
+      <div class="tick-sub">Capital propio + deuda</div>
+    </div>
+    <div class="tick" id="kpi-ing">
+      <div class="tick-label">Ingreso Bruto</div>
+      <div class="tick-val green" id="kpi-ing-v">$0</div>
+      <div class="tick-sub">Precio × m² vendible</div>
+    </div>
+    <div class="tick" id="kpi-util">
+      <div class="tick-label">Utilidad Neta</div>
+      <div class="tick-val" id="kpi-util-v">$0</div>
+      <div class="tick-sub">Ingreso − Inversión</div>
+    </div>
+    <div class="tick" id="kpi-roi">
+      <div class="tick-label">ROI del Proyecto</div>
+      <div class="tick-val" id="kpi-roi-v">0%</div>
+      <div class="tick-sub">Sobre inversión total</div>
+      <div class="tick-bar"><div class="tick-fill" id="roi-fill" style="width:0%"></div></div>
+    </div>
+    <div class="tick">
+      <div class="tick-label">Margen sobre ventas</div>
+      <div class="tick-val gold" id="kpi-margen">0%</div>
+      <div class="tick-sub">Utilidad / Ingreso neto</div>
+    </div>
+    <div class="tick">
+      <div class="tick-label">Costo Total por m²</div>
+      <div class="tick-val blue" id="kpi-cpm2">$0/m²</div>
+      <div class="tick-sub">Inversión / m² construido</div>
+    </div>
+    <div class="tick">
+      <div class="tick-label">Punto de Equilibrio</div>
+      <div class="tick-val gold" id="kpi-be">0 u.</div>
+      <div class="tick-sub">Unidades mínimas a vender</div>
+    </div>
+    <div class="tick">
+      <div class="tick-label">Recuperación de capital</div>
+      <div class="tick-val" id="kpi-payback">—</div>
+      <div class="tick-sub" id="kpi-payback-sub">Venta o renta</div>
+    </div>
+  </div>
+
+  <!-- SCENARIOS -->
+  <div class="sec-hdr">Escenarios de rentabilidad</div>
+  <div class="scen-row">
+    <div class="scen pess">
+      <div class="scen-name">⚠ Pesimista −15%</div>
+      <div class="scen-roi" id="scen-pess-roi">0%</div>
+      <div class="scen-detail" id="scen-pess-det">—</div>
+    </div>
+    <div class="scen base">
+      <div class="scen-name">◆ Base (actual)</div>
+      <div class="scen-roi" id="scen-base-roi">0%</div>
+      <div class="scen-detail" id="scen-base-det">—</div>
+    </div>
+    <div class="scen opt">
+      <div class="scen-name">✦ Optimista +15%</div>
+      <div class="scen-roi" id="scen-opt-roi">0%</div>
+      <div class="scen-detail" id="scen-opt-det">—</div>
+    </div>
+  </div>
+
+  <!-- METRICS DETAIL -->
+  <div class="sec-hdr">Detalle de métricas</div>
+  <div class="metrics-grid" id="metrics-grid"></div>
+
+  <!-- BREAKEVEN VISUAL -->
+  <div class="sec-hdr">Punto de equilibrio visual</div>
+  <div class="be-visual">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-size:13px;font-weight:500;" id="be-title">Unidades necesarias para no perder</span>
+      <span style="font-size:12px;color:var(--gold);" id="be-fraction">0 / 0</span>
+    </div>
+    <div class="be-bar-wrap">
+      <div class="be-bar-sold" id="be-sold-bar" style="width:0%"></div>
+      <div class="be-bar-fill" id="be-main-bar" style="width:100%"></div>
+    </div>
+    <div class="be-labels">
+      <span id="be-label-l">0 unidades vendidas</span>
+      <span id="be-label-r">Meta: 0 unidades</span>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.7;" id="be-text">—</div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="sec-hdr">Análisis visual</div>
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">Desglose de inversión</div>
+      <div class="chart-wrap"><canvas id="chart-costos"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Inversión vs Ingresos</div>
+      <div class="chart-wrap"><canvas id="chart-waterfall"></canvas></div>
+    </div>
+    <div class="chart-card full">
+      <div class="chart-title">Flujo de caja acumulado (meses)</div>
+      <div class="chart-wrap"><canvas id="chart-flujo"></canvas></div>
+    </div>
+  </div>
+
+  <!-- SENSITIVITY -->
+  <div class="sec-hdr">Análisis de sensibilidad — ROI por precio de venta vs. costo de construcción</div>
+  <div class="sens-wrap">
+    <div id="sens-table-wrap"></div>
+  </div>
+
+  <!-- EDUCATIONAL INSIGHTS -->
+  <div class="sec-hdr">Insights educativos</div>
+  <div class="insights" id="insights-wrap"></div>
+
+  <!-- RECOMMENDATION -->
+  <div class="sec-hdr">Recomendación final</div>
+  <div id="recommendation" style="background:#F8F9FA;border:1px solid #DADCE0;padding:24px;margin-bottom:32px;">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;margin-bottom:12px;" id="rec-title">Ingresa los datos para obtener la recomendación</div>
+    <div style="font-size:14px;color:var(--muted);line-height:1.8;" id="rec-text">—</div>
+  </div>
+
+</div>
+</div><!-- /results -->
+</div><!-- /app -->
+
+<div class="toast" id="toast"><span>✓</span><span id="toast-msg">Calculado</span></div>
+
+<script>
+// ═══════════════ UTILS ═══════════════
+const $ = id => document.getElementById(id);
+const G = id => parseFloat($(id)?.value)||0;
+const fmt = n => '$'+Math.abs(Math.round(n)).toLocaleString('en-US');
+const fmtS = n => (n<0?'-$':'$')+Math.abs(Math.round(n)).toLocaleString('en-US');
+const fmtP = n => (n*100).toFixed(1)+'%';
+const GOLD='#C9A96E',GREEN='#4CAF7D',RED='#E05555',BLUE='#4ABDE0',ORANGE='#D4813A',MUTED='#5F6368',FAINT='#D3D6DA',BG3='#F0F2F5',BG='#F8F9FA';
+
+let chartCostos=null, chartWF=null, chartFlujo=null;
+
+function setV(id,v){ $(id).value=v; calc(); }
+function syncR(rangeId, labelId, suffix=''){
+  const v=parseFloat($(rangeId).value);
+  $(labelId).textContent=v+suffix;
+  const vid=rangeId+'_v'; if($(vid)) $(vid).textContent=v+suffix;
+}
+function switchTab(idx, btn){
+  document.querySelectorAll('.tab-panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  document.querySelectorAll('.itab').forEach((b,i)=>b.classList.toggle('active',i===idx));
+}
+function selectRadio(name, val, el){
+  document.querySelectorAll(`[name="${name}"]`).forEach(r=>{ r.value===val?r.checked=true:null; });
+  el.closest('.radio-group').querySelectorAll('.radio-opt').forEach(o=>o.classList.remove('active'));
+  el.classList.add('active');
+  calc();
+}
+function getRadio(name){ return document.querySelector(`[name="${name}"]:checked`)?.value||''; }
+function showProjectType(){ calc(); }
+function showIncomeType(){ calc(); }
+function showToast(msg){ const t=$('toast'); $('toast-msg').textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+function resetAll(){
+  ['precio_terreno','area_lote','frente','fondo','densidad','gastos_legales','estudios',
+   'unidades','m2_unidad','meses_const','costo_m2','diseno','permisos','amueblado',
+   'financiamiento_pct','tasa_anual','gastos_bancarios','comision_pct','marketing',
+   'imprevistos_pct','precio_m2','precio_unidad_override','preventa_pct',
+   'alquiler_mensual','ocupacion_pct','tarifa_noche','noches_mes','valor_reventa','pct_vendible']
+  .forEach(id=>{ const el=$(id); if(el&&el.defaultValue) el.value=el.defaultValue; });
+  calc(); showToast('Variables reiniciadas');
+}
+
+// ═══════════════ CORE CALC ═══════════════
+function computeProject(priceAdj=1, costAdj=1, monthAdj=1){
+  const topoMult={'plano':1,'leve':1.08,'moderado':1.15,'accidentado':1.28};
+  const topo = topoMult[getRadio('topo')]||1;
+
+  // INPUTS
+  const terreno    = G('precio_terreno');
+  const areaLote   = G('area_lote');
+  const gasLeg     = G('gastos_legales');
+  const estudios   = G('estudios');
+  const unidades   = G('unidades')||1;
+  const m2Unidad   = G('m2_unidad');
+  const pctVend    = G('pct_vendible')/100;
+  const mesesConst = G('meses_const')*monthAdj;
+  const costoM2    = G('costo_m2')*costAdj*topo;
+  const diseno     = G('diseno');
+  const permisos   = G('permisos');
+  const amueblado  = G('amueblado');
+  const finPct     = G('financiamiento_pct')/100;
+  const tasa       = G('tasa_anual')/100;
+  const gastosBco  = G('gastos_bancarios');
+  const comPct     = G('comision_pct')/100;
+  const marketing  = G('marketing');
+  const impPct     = G('imprevistos_pct')/100;
+  const precioM2   = G('precio_m2')*priceAdj;
+  const precioOverride = G('precio_unidad_override');
+  const alqMes    = G('alquiler_mensual');
+  const ocupPct   = G('ocupacion_pct')/100;
+  const tarifaNoche = G('tarifa_noche');
+  const nochesMes = G('noches_mes');
+  const reventa   = G('valor_reventa');
+
+  // CONSTRUCTION
+  const areaConst   = m2Unidad * unidades;
+  const areaVendible = areaConst * pctVend;
+  const constBase   = areaConst * costoM2;
+  const imprevistos = constBase * impPct;
+
+  // INVESTMENT
+  const subtotal = terreno + gasLeg + estudios + constBase + imprevistos + diseno + permisos + amueblado + marketing;
+  const deudaMonto = subtotal * finPct;
+  const intereses  = deudaMonto * tasa * (mesesConst/12);
+  const invTotal   = subtotal + intereses + gastosBco;
+  const equityMonto = invTotal * (1-finPct);
+  const costoTotalM2 = areaConst > 0 ? invTotal / areaConst : 0;
+
+  // REVENUE
+  let ingresoBruto = 0;
+  let precioUnidad = 0;
+  if(precioOverride > 0){ precioUnidad = precioOverride; ingresoBruto = precioUnidad * unidades; }
+  else { precioUnidad = areaVendible/unidades * precioM2; ingresoBruto = areaVendible * precioM2; }
+  const comision   = ingresoBruto * comPct;
+  const ingresoNeto = ingresoBruto - comision;
+
+  // RENTAL INCOME
+  const ingAlqAnual = alqMes * 12 * unidades * ocupPct;
+  const ingSTRAnual = tarifaNoche * nochesMes * 12 * unidades * ocupPct;
+  const ingRentaTotal = ingAlqAnual + ingSTRAnual;
+  const paybackRenta = ingRentaTotal > 0 ? invTotal / ingRentaTotal : 0;
+  const capRate = invTotal > 0 ? ingRentaTotal / invTotal : 0;
+
+  // PROFITABILITY
+  const utilidadNeta = ingresoNeto - invTotal;
+  const roi = invTotal > 0 ? utilidadNeta / invTotal : 0;
+  const margen = ingresoNeto > 0 ? utilidadNeta / ingresoNeto : 0;
+  const roiEquity = equityMonto > 0 ? utilidadNeta / equityMonto : 0;
+  const breakeven = precioUnidad > 0 ? Math.ceil(invTotal / precioUnidad) : 0;
+  const precioPiso = areaVendible > 0 ? invTotal / areaVendible : 0;
+
+  // CASH FLOW monthly
+  const months = Math.max(Math.ceil(mesesConst + 3), 15);
+  const cashFlows = Array(months+1).fill(0);
+  cashFlows[0] = -(terreno + gasLeg + estudios + intereses + gastosBco);
+  for(let m=1;m<=Math.ceil(mesesConst);m++){
+    cashFlows[m] -= (constBase+imprevistos)/Math.ceil(mesesConst);
+    if(m<=2) cashFlows[m] -= (diseno+permisos)/2;
+    if(m>=3&&m<=Math.ceil(mesesConst)) cashFlows[m] -= amueblado/Math.max(1,Math.ceil(mesesConst)-2);
+    if(m>=3) cashFlows[m] -= marketing/Math.max(1,months-2);
+  }
+  const salesStart = Math.ceil(mesesConst);
+  const salesMonths = months - salesStart;
+  if(salesMonths > 0){
+    for(let m=salesStart+1;m<=months;m++) cashFlows[m] += ingresoNeto/salesMonths;
+  }
+  // Rental income
+  if(ingRentaTotal > 0){
+    for(let m=salesStart+1;m<=months;m++) cashFlows[m] += ingRentaTotal/12;
+  }
+
+  // WACC simplified
+  const wacc = 0.12;
+  const vpn = cashFlows.reduce((acc,cf,t)=>acc+cf/Math.pow(1+wacc/12,t),0);
+
+  return {
+    terreno, gasLeg, estudios, constBase, imprevistos, diseno, permisos, amueblado,
+    marketing, intereses, gastosBco, subtotal, invTotal, equityMonto, deudaMonto,
+    areaConst, areaVendible, costoTotalM2, ingresoBruto, comision, ingresoNeto,
+    ingRentaTotal, ingAlqAnual, ingSTRAnual, paybackRenta, capRate,
+    utilidadNeta, roi, margen, roiEquity, breakeven, precioPiso,
+    precioUnidad, cashFlows, vpn, months, mesesConst,
+    unidades, priceAdj, costAdj
+  };
+}
+
+// ═══════════════ RENDER ═══════════════
+function calc(){
+  const r = computeProject();
+  const rP = computeProject(0.85,1.15,1.3);
+  const rO = computeProject(1.15,0.90,0.9);
+
+  // Price display
+  $('precio_calc_display').textContent = fmt(r.ingresoBruto);
+  $('precio_calc_sub').textContent = `${Math.round(r.areaVendible).toLocaleString()} m² × $${G('precio_m2').toLocaleString()}/m² × ${r.unidades} unidades`;
+
+  // KPIs
+  $('kpi-inv-v').textContent = fmt(r.invTotal);
+  $('kpi-ing-v').textContent = fmt(r.ingresoBruto);
+  $('kpi-util-v').textContent = fmtS(r.utilidadNeta);
+  $('kpi-util-v').className = 'tick-val '+(r.utilidadNeta>=0?'green':'red');
+  $('kpi-roi-v').textContent = fmtP(r.roi);
+  $('kpi-roi-v').className = 'tick-val '+(r.roi>=0.20?'green':r.roi>=0.10?'gold':'red');
+  $('kpi-margen').textContent = fmtP(r.margen);
+  $('kpi-cpm2').textContent = '$'+Math.round(r.costoTotalM2).toLocaleString()+'/m²';
+  $('kpi-be').textContent = r.breakeven > 0 ? r.breakeven+' u.' : '—';
+
+  if(r.paybackRenta > 0){
+    $('kpi-payback').textContent = r.paybackRenta.toFixed(1)+' años';
+    $('kpi-payback-sub').textContent = 'Recuperación por renta';
+    $('kpi-payback').className = 'tick-val '+(r.paybackRenta<8?'green':r.paybackRenta<12?'gold':'red');
+  } else {
+    $('kpi-payback').textContent = '—';
+    $('kpi-payback-sub').textContent = 'Sin ingresos por renta';
+    $('kpi-payback').className = 'tick-val muted';
+  }
+
+  // ROI bar
+  const pct = Math.min(Math.max(r.roi*100,0),50);
+  $('roi-fill').style.width = (pct/50*100)+'%';
+  $('roi-fill').style.background = r.roi>=0.20?GREEN:r.roi>=0.10?GOLD:RED;
+
+  renderViability(r);
+  renderScenarios(rP, r, rO);
+  renderMetrics(r);
+  renderBreakeven(r);
+  renderCharts(r);
+  renderSensitivity();
+  renderInsights(r);
+  renderRecommendation(r);
+}
+
+function renderViability(r){
+  const banner = $('via-banner');
+  let icon, label, title, desc, color, bg;
+  if(r.invTotal < 100){ icon='⏳'; label='Esperando datos'; title='Ingresa los datos del proyecto'; desc='El simulador calculará la viabilidad automáticamente.'; color='var(--muted)'; bg='var(--dim)'; }
+  else if(r.roi >= 0.25){ icon='✅'; label='Proyecto VIABLE — Alta rentabilidad'; title=`ROI de ${fmtP(r.roi)} — Proyecto atractivo`; desc=`Tu proyecto genera una utilidad neta de ${fmt(r.utilidadNeta)} sobre una inversión de ${fmt(r.invTotal)}. El margen del ${fmtP(r.margen)} supera el umbral mínimo recomendado del 20%.`; color=GREEN; bg='rgba(76,175,125,0.06)'; }
+  else if(r.roi >= 0.15){ icon='🟡'; label='Proyecto VIABLE — Rentabilidad adecuada'; title=`ROI de ${fmtP(r.roi)} — Avanzar con criterio`; desc=`El proyecto genera ${fmt(r.utilidadNeta)} de utilidad neta. El ROI está dentro del rango aceptable. Verifica que el escenario pesimista siga siendo positivo antes de comprometer capital.`; color=GOLD; bg='rgba(201,169,110,0.06)'; }
+  else if(r.roi >= 0.05){ icon='⚠️'; label='Proyecto MARGINAL — Requiere optimización'; title=`ROI de ${fmtP(r.roi)} — Revisar supuestos`; desc=`El retorno es bajo para el riesgo que representa. Analiza si puedes reducir el costo de construcción, aumentar el precio de venta o eliminar gastos no esenciales. El margen actual del ${fmtP(r.margen)} no compensa adecuadamente el riesgo.`; color=ORANGE; bg='rgba(212,129,58,0.06)'; }
+  else if(r.roi >= 0){ icon='🔴'; label='Proyecto RIESGOSO — No recomendable'; title=`ROI de ${fmtP(r.roi)} — Alta probabilidad de pérdida`; desc=`Con un margen de ${fmtP(r.margen)}, cualquier desviación en costos o precios puede destruir el proyecto. No avances sin reestructurar completamente la ecuación financiera.`; color=RED; bg='rgba(224,85,85,0.06)'; }
+  else { icon='❌'; label='Proyecto NO VIABLE — Pérdida proyectada'; title=`Pérdida de ${fmt(Math.abs(r.utilidadNeta))} proyectada`; desc=`El proyecto destruye capital. La inversión total de ${fmt(r.invTotal)} supera el ingreso neto de ${fmt(r.ingresoNeto)}. Necesitas cambiar fundamentalmente la estructura del proyecto para que sea viable.`; color=RED; bg='rgba(224,85,85,0.08)'; }
+  $('via-icon').textContent=icon;
+  $('via-label').textContent=label; $('via-label').style.color=color;
+  $('via-title').textContent=title;
+  $('via-desc').textContent=desc;
+  $('via-score').textContent=fmtP(r.roi);
+  banner.style.background=bg; banner.style.borderColor=color.replace('var(','').replace(')','');
+}
+
+function renderScenarios(rP, rB, rO){
+  function scen(prefix,rc){
+    $(prefix+'-roi').textContent=fmtP(rc.roi);
+    $(prefix+'-det').innerHTML=`Utilidad: ${fmtS(rc.utilidadNeta)}<br>Inversión: ${fmt(rc.invTotal)}<br>VPN: ${fmtS(rc.vpn)}`;
+  }
+  scen('scen-pess',rP); scen('scen-base',rB); scen('scen-opt',rO);
+}
+
+function renderMetrics(r){
+  const rows=[
+    ['Inversión en terreno',fmt(r.terreno+r.gasLeg+r.estudios),null,'gd'],
+    ['Costo de construcción',fmt(r.constBase),null,null],
+    ['Contingencia / imprevistos',fmt(r.imprevistos),null,null],
+    ['Diseño, arquitectura y permisos',fmt(r.diseno+r.permisos),null,null],
+    ['Sistema / amueblado',fmt(r.amueblado),null,null],
+    ['Marketing y publicidad',fmt(r.marketing),null,null],
+    ['Intereses del crédito',fmt(r.intereses),null,null],
+    ['Gastos bancarios',fmt(r.gastosBco),null,null],
+    ['INVERSIÓN TOTAL',fmt(r.invTotal),'border-top:1px solid var(--b)','gd'],
+    ['Ingreso bruto de ventas',fmt(r.ingresoBruto),null,'g'],
+    ['Comisión de corredor',fmt(r.comision),null,null],
+    ['Ingreso neto',fmt(r.ingresoNeto),null,'g'],
+    ['UTILIDAD NETA',fmtS(r.utilidadNeta),'border-top:1px solid var(--b)',r.utilidadNeta>=0?'g':'r'],
+    ['ROI sobre inversión',fmtP(r.roi),null,r.roi>=0.15?'g':r.roi>=0.05?'gd':'r'],
+    ['ROI sobre capital propio',fmtP(r.roiEquity),null,r.roiEquity>=0.25?'g':r.roiEquity>=0.1?'gd':'r'],
+    ['Margen sobre ventas',fmtP(r.margen),null,r.margen>=0.20?'g':r.margen>=0.10?'gd':'r'],
+    ['Precio de equilibrio/m²','$'+Math.round(r.precioPiso).toLocaleString()+'/m²',null,'gd'],
+    ['VPN (WACC 12%)',fmtS(r.vpn),null,r.vpn>=0?'g':'r'],
+    r.ingRentaTotal>0?['Ingreso renta anual',fmt(r.ingRentaTotal),null,'g']:null,
+    r.capRate>0?['Cap Rate (renta)',fmtP(r.capRate),null,'gd']:null,
+    r.paybackRenta>0?['Payback por renta',r.paybackRenta.toFixed(1)+' años',null,r.paybackRenta<10?'g':'gd']:null,
+  ].filter(Boolean);
+
+  $('metrics-grid').innerHTML=rows.map(([n,v,sty,cls])=>`
+    <div class="metric-row" style="${sty||''}">
+      <span class="metric-name">${n}</span>
+      <span class="metric-val ${cls||''}">${v}</span>
+    </div>`).join('');
+}
+
+function renderBreakeven(r){
+  const sold = G('preventa_pct')/100 * r.unidades;
+  const be = r.breakeven;
+  const total = r.unidades;
+  $('be-title').textContent = `Necesitas vender ${be} de ${total} unidades para no perder`;
+  $('be-fraction').textContent = `${Math.round(sold)} vendidas / ${be} necesarias`;
+  const soldPct = total>0?Math.min(sold/total,1)*100:0;
+  const bePct = total>0?Math.min(be/total,1)*100:0;
+  $('be-main-bar').style.width = bePct+'%';
+  $('be-sold-bar').style.width = Math.min(soldPct,bePct)+'%';
+  $('be-label-l').textContent = `${Math.round(sold)} unidades en preventa`;
+  $('be-label-r').textContent = `Meta mínima: ${be} unidades`;
+  const pctNeeded = total>0?(be/total*100).toFixed(0):0;
+  const prevPct = G('preventa_pct');
+  $('be-text').textContent = be<=total
+    ? `Necesitas vender el ${pctNeeded}% del inventario para recuperar la inversión. ${prevPct>0?`Tienes ${prevPct}% en preventa — ${soldPct>=bePct?'¡ya superaste el punto de equilibrio!':'aún te faltan '+Math.ceil(be-sold)+' unidades.'}`:''} ${be<=Math.ceil(total*0.7)?'Esto es alcanzable con una estrategia de preventa sólida.':'Considera reducir el número de unidades o el precio para bajar el punto de equilibrio.'}`
+    : `⚠ El punto de equilibrio (${be} unidades) supera las unidades del proyecto (${total}). El proyecto no puede ser rentable con la configuración actual — revisa el precio de venta o reduce los costos.`;
+}
+
+function renderCharts(r){
+  // COST DONUT
+  const cData=[r.terreno+r.gasLeg+r.estudios,r.constBase+r.imprevistos,r.diseno+r.permisos,r.amueblado,r.marketing,r.intereses+r.gastosBco];
+  const cLabels=['Terreno','Construcción','Diseño/Permisos','Equipamiento','Marketing','Financiamiento'];
+  if(chartCostos){ chartCostos.data.datasets[0].data=cData; chartCostos.update(); }
+  else chartCostos=new Chart($('chart-costos'),{type:'doughnut',data:{labels:cLabels,datasets:[{data:cData,backgroundColor:[GOLD,ORANGE,'#9B7A45','#6A5A30',MUTED,FAINT],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:true,position:'right',labels:{color:'5F6368',font:{size:9},boxWidth:9,padding:6}},tooltip:{callbacks:{label:d=>' '+fmt(d.raw)}}}}});
+
+  // WATERFALL
+  const wData=[r.invTotal,r.ingresoNeto,r.utilidadNeta];
+  const wColors=[RED,BLUE,r.utilidadNeta>=0?GREEN:RED];
+  if(chartWF){chartWF.data.datasets[0].data=wData;chartWF.data.datasets[0].backgroundColor=wColors;chartWF.update();}
+  else chartWF=new Chart($('chart-waterfall'),{type:'bar',data:{labels:['Inversión','Ingreso neto','Utilidad'],datasets:[{data:wData,backgroundColor:wColors,borderRadius:2,barPercentage:0.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:d=>' '+fmtS(d.raw)}}},scales:{x:{grid:{color:'E0E0E0'},ticks:{color:MUTED}},y:{grid:{color:'E0E0E0'},ticks:{color:'5F6368',callback:v=>'$'+Math.round(v/1000)+'K'}}}}});
+
+  // CASH FLOW LINE
+  const cumul=[]; let acc=0;
+  r.cashFlows.forEach(cf=>{acc+=cf;cumul.push(acc);});
+  const labels=r.cashFlows.map((_,i)=>i===0?'Inicio':'M'+i);
+  if(chartFlujo){chartFlujo.data.labels=labels;chartFlujo.data.datasets[0].data=cumul;chartFlujo.data.datasets[1].data=r.cashFlows;chartFlujo.update();}
+  else chartFlujo=new Chart($('chart-flujo'),{type:'bar',data:{labels,datasets:[{type:'line',label:'Acumulado',data:cumul,borderColor:GOLD,backgroundColor:'rgba(201,169,110,0.07)',borderWidth:2,pointRadius:2,fill:true,tension:0.3,yAxisID:'y'},{type:'bar',label:'Flujo mensual',data:r.cashFlows,backgroundColor:r.cashFlows.map(v=>v>=0?'rgba(76,175,125,0.5)':'rgba(224,85,85,0.5)'),borderRadius:2,yAxisID:'y'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'5F6368',font:{size:10}}},tooltip:{callbacks:{label:d=>' '+fmtS(d.raw)}}},scales:{x:{grid:{color:'E0E0E0'},ticks:{color:'5F6368',font:{size:9}}},y:{grid:{color:'E0E0E0'},ticks:{color:'5F6368',callback:v=>'$'+Math.round(v/1000)+'K'}}}}});
+}
+
+function renderSensitivity(){
+  const priceVars=[1.30,1.20,1.10,1.0,0.90,0.80];
+  const pLabels=['+30%','+20%','+10%','Base','-10%','-20%'];
+  const costAdjs=[0.80,0.90,1.0,1.10,1.20,1.30];
+  const cLabels=['-20%','-10%','Base','+10%','+20%','+30%'];
+  let html=`<table class="sens-table"><thead><tr><th class="row-hdr">Precio ↓ / Costo →</th>`;
+  cLabels.forEach(c=>html+=`<th>${c}</th>`);
+  html+='</tr></thead><tbody>';
+  priceVars.forEach((pa,pi)=>{
+    html+=`<tr><td class="row-hdr">${pLabels[pi]}</td>`;
+    costAdjs.forEach((ca,ci)=>{
+      const r2=computeProject(pa,ca);
+      const roi=r2.roi;
+      const isBase=pi===3&&ci===2;
+      const cls=isBase?'base-c':roi>=0.25?'good-c':roi>=0.10?'mid-c':'bad-c';
+      html+=`<td class="${cls}">${fmtP(roi)}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  $('sens-table-wrap').innerHTML=html;
+}
+
+function renderInsights(r){
+  const items=[];
+  // Identify biggest cost driver
+  const costs=[['terreno',r.terreno+r.gasLeg+r.estudios],['construccion',r.constBase+r.imprevistos],['financiamiento',r.intereses+r.gastosBco],['indirectos',r.diseno+r.permisos+r.marketing+r.amueblado]];
+  costs.sort((a,b)=>b[1]-a[1]);
+  const biggest=costs[0];
+  items.push({icon:'🔍',title:'Variable más crítica para la rentabilidad',text:`El mayor costo del proyecto es <strong style="color:var(--gold)">${biggest[0]==='terreno'?'el terreno':biggest[0]==='construccion'?'la construcción':biggest[0]==='financiamiento'?'el financiamiento bancario':'los gastos indirectos'}</strong> (${fmt(biggest[1])}, ${r.invTotal>0?(biggest[1]/r.invTotal*100).toFixed(1)+'% del total':'—'}). Reducir esta variable en un 10% aumentaría el ROI en aproximadamente ${fmtP(biggest[1]*0.1/r.invTotal)}.`,badge:null});
+
+  // Topography impact
+  const topo=getRadio('topo');
+  if(topo!=='plano') items.push({icon:'⛰',title:'Impacto de la topografía',text:`La pendiente ${topo} agrega un ${topo==='leve'?'8':topo==='moderado'?'15':'28'}% al costo de construcción. Esto representa ${fmt(r.constBase*(topo==='leve'?0.08/1.08:topo==='moderado'?0.15/1.15:0.28/1.28))} adicionales versus un lote plano equivalente. <strong style="color:var(--gold)">Siempre solicita un estudio geotécnico antes de comprometerte.</strong>`,badge:null});
+
+  // Financing leverage
+  const finPct=G('financiamiento_pct');
+  if(finPct>0) items.push({icon:'🏦',title:'Efecto del apalancamiento bancario',text:`Con un ${finPct}% financiado, tu capital propio es ${fmt(r.equityMonto)}. El ROI sobre tu capital propio es <strong style="color:var(--gold)">${fmtP(r.roiEquity)}</strong> vs ${fmtP(r.roi)} sobre inversión total. El apalancamiento amplifica los retornos — pero también las pérdidas si el proyecto fracasa. ${finPct>70?'⚠ Más del 70% de deuda es riesgoso sin preventa confirmada.':''}`,badge:finPct>70?{text:'⚠ Deuda elevada',color:'var(--red)'}:null});
+
+  // Price vs breakeven
+  const precioActual=G('precio_m2');
+  const precioPisoM2=r.areaVendible>0?r.precioPiso:0;
+  const margenPrecio=precioActual>0?(precioActual-precioPisoM2)/precioActual*100:0;
+  items.push({icon:'📊',title:'¿Qué pasa si baja el precio de venta?',text:`Tu precio actual de $${precioActual.toLocaleString()}/m² está <strong style="color:var(--gold)">${margenPrecio.toFixed(1)}% por encima del precio mínimo</strong> ($${Math.round(precioPisoM2).toLocaleString()}/m²) para no perder. Si el precio cayera un 15% ($${Math.round(precioActual*0.85).toLocaleString()}/m²), el ROI sería ${fmtP(computeProject(0.85).roi)}. ${margenPrecio<15?'⚠ El margen de seguridad en precio es bajo — una corrección de mercado puede comprometer el proyecto.':'El margen de seguridad en precio es adecuado.'}`,badge:null});
+
+  // Construction cost impact
+  items.push({icon:'🏗',title:'¿Qué pasa si sube el costo de construcción?',text:`Si la construcción sube un 15% (escenario pesimista), tu ROI cae a ${fmtP(computeProject(1,1.15).roi)}. El costo de construcción actual de $${G('costo_m2')}/m² representa ${r.invTotal>0?(r.constBase/r.invTotal*100).toFixed(1):'—'}% de la inversión total. Siempre incluye contingencia mínima del 8-12% — actualmente tienes ${G('imprevistos_pct')}%.`,badge:G('imprevistos_pct')<8?{text:'⚠ Contingencia baja',color:'var(--red)'}:null});
+
+  // STR / Rental
+  const str=G('tarifa_noche');
+  const alq=G('alquiler_mensual');
+  if(str>0||alq>0) items.push({icon:'🏖',title:'Ingreso por renta',text:`El ingreso anual proyectado por renta es ${fmt(r.ingRentaTotal)}. La recuperación de inversión por esta vía tomaría aproximadamente <strong style="color:var(--gold)">${r.paybackRenta.toFixed(1)} años</strong> sin contar la apreciación del activo. El Cap Rate es ${fmtP(r.capRate)}. ${r.capRate>0.08?'Este es un cap rate atractivo para el mercado actual.':r.capRate>0.05?'Cap rate aceptable — por encima del umbral mínimo del 5%.':'Cap rate bajo — considera aumentar la tarifa o la ocupación.'}`,badge:null});
+
+  $('insights-wrap').innerHTML=items.map(item=>`
+    <div class="insight-card">
+      <div class="insight-icon">${item.icon}</div>
+      <div style="flex:1">
+        <div class="insight-title">${item.title}</div>
+        <div class="insight-text">${item.text}</div>
+        ${item.badge?`<span class="insight-badge" style="background:${item.badge.color}20;color:${item.badge.color};border:1px solid ${item.badge.color}40">${item.badge.text}</span>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function renderRecommendation(r){
+  const roi=r.roi, margen=r.margen, vpn=r.vpn;
+  const rP=computeProject(0.85,1.15);
+  const beOk=r.breakeven<=r.unidades;
+  const pessOk=rP.roi>0;
+  const contingOk=G('imprevistos_pct')>=8;
+  const filters=[roi>=0.15,margen>=0.20,vpn>=0,beOk,pessOk];
+  const passedCount=filters.filter(Boolean).length;
+
+  let title, text;
+  if(passedCount===5){ title='✅ GO — Este proyecto cumple todos los criterios de viabilidad'; text=`Con un ROI de ${fmtP(roi)}, margen del ${fmtP(margen)} y VPN de ${fmt(vpn)}, el proyecto supera los cinco filtros de viabilidad. ${r.ingRentaTotal>0?`El ingreso adicional por renta de ${fmt(r.ingRentaTotal)}/año fortalece aún más la estructura. `:''}El punto de equilibrio de ${r.breakeven} unidades es alcanzable con ${G('preventa_pct')>0?`la preventa del ${G('preventa_pct')}% ya confirmada`:'una estrategia de preventa'}. Antes de avanzar: confirma el precio de venta con comparables reales, cotiza la construcción con 2-3 contratistas, y asegúrate de tener el due diligence legal completado.`; }
+  else if(passedCount>=3){ title=`⚡ AVANZAR CON PRECAUCIÓN — ${passedCount}/5 criterios cumplidos`; text=`El proyecto tiene potencial pero requiere ajustes. ${!filters[0]?`ROI de ${fmtP(roi)} está por debajo del 15% mínimo — considera reducir costos o aumentar el precio de venta. `:''}${!filters[1]?`Margen del ${fmtP(margen)} está por debajo del 20% — el proyecto es vulnerable a imprevistos. `:''}${!filters[4]?`El escenario pesimista (precio -15%, costo +15%) arroja un ROI de ${fmtP(rP.roi)}, lo que representa un riesgo real. `:''}${!beOk?`El punto de equilibrio (${r.breakeven} unidades) supera el total del proyecto (${r.unidades}). `:''}Trabaja en optimizar las variables problemáticas antes de comprometer capital.`; }
+  else { title=`🛑 NO-GO — Solo ${passedCount}/5 criterios cumplidos`; text=`El proyecto en su configuración actual no genera la rentabilidad necesaria para justificar el riesgo. ${r.utilidadNeta<0?`Se proyecta una pérdida de ${fmt(Math.abs(r.utilidadNeta))}. `:''}Para mejorar la viabilidad, considera: ${G('precio_m2')<2000?'aumentar el precio de venta por m², ':''}${G('costo_m2')>1000?'buscar opciones de construcción más eficientes, ':''}${G('financiamiento_pct')>70?'reducir el porcentaje de financiamiento, ':''}o reevaluar si este terreno es el correcto para el tipo de proyecto que planeas desarrollar.`; }
+
+  $('rec-title').textContent=title;
+  $('rec-text').innerHTML=text;
+  const filterLabels=['ROI > 15%','Margen > 20%','VPN > 0','Punto equilibrio alcanzable','Escenario pesimista positivo'];
+  $('rec-text').innerHTML+=`<div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">${filters.map((f,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#F0F2F5;font-size:11px;"><span style="color:${f?GREEN:RED}">${f?'✓':'✗'}</span><span style="color:${f?'var(--text)':'var(--muted)'}">${filterLabels[i]}</span></div>`).join('')}</div>`;
+}
+
+// ═══════════════ INIT ═══════════════
+window.addEventListener('load', calc);
+</script>
+</body>
+</html>
