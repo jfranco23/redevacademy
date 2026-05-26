@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Financiamiento — RED ACADEMY</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#9B7A45;--gold-l:#C8A857;--gold-d:#7A5C2E;--gold-p:rgba(155,122,69,0.10);
+  --bg:#FFFFFF;--bg2:#F8F9FA;--bg3:#F0F2F5;--bg4:#E8EAED;
+  --text:#111B21;--muted:#5F6368;--faint:#D3D6DA;
+  --dim:rgba(0,0,0,0.08);--b:rgba(0,0,0,0.14);
+  --green:#1E8E3E;--green-p:rgba(30,142,62,0.08);
+  --red:#D93025;--red-p:rgba(217,48,37,0.08);
+  --blue:#1A73E8;--blue-p:rgba(26,115,232,0.08);
+  --orange:#E37400;
+}
+body{background:var(--bg2);color:var(--text);font-family:'Outfit',sans-serif;font-weight:300;min-height:100vh;}
+
+/* NAV */
+.nav{height:54px;background:#FFFFFF;border-bottom:1px solid #E0E0E0;box-shadow:0 1px 4px rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:200;}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;letter-spacing:.12em;color:var(--gold);}
+.nav-logo span{color:var(--text);font-weight:300;}
+.nav-badge{font-size:9px;letter-spacing:.18em;text-transform:uppercase;background:var(--gold-p);color:var(--gold);padding:4px 11px;border:1px solid rgba(155,122,69,0.25);}
+
+/* MAIN TABS */
+.main-tabs{display:flex;background:#FFFFFF;border-bottom:2px solid #E0E0E0;padding:0 24px;}
+.main-tab{padding:16px 24px;font-size:14px;font-weight:400;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;display:flex;align-items:center;gap:8px;font-family:'Outfit',sans-serif;}
+.main-tab:hover{color:var(--text);}
+.main-tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:500;}
+.tab-icon{font-size:18px;}
+
+/* LAYOUT */
+.tab-content{display:none;padding:24px;}
+.tab-content.active{display:block;}
+
+/* INPUT CARD */
+.card{background:#FFFFFF;border:1px solid #E0E0E0;border-radius:8px;padding:20px 24px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+.card-title{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.card-title span{font-size:16px;}
+
+.field-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.04em;}
+.field input,.field select{background:#FFFFFF;border:1px solid #DADCE0;color:var(--text);padding:9px 12px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;transition:border-color .2s;border-radius:4px;-moz-appearance:textfield;}
+.field input::-webkit-outer-spin-button,.field input::-webkit-inner-spin-button{-webkit-appearance:none;}
+.field input:focus,.field select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(26,115,232,0.12);}
+.field-note{font-size:10px;color:var(--muted);font-style:italic;}
+
+/* RESULTS LAYOUT */
+.results-layout{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start;}
+
+/* KPI CARDS */
+.kpi-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+.kpi-row-4{grid-template-columns:repeat(4,1fr);}
+.kpi{background:#FFFFFF;border:1px solid #E0E0E0;border-radius:8px;padding:14px 16px;}
+.kpi.highlight{border-color:var(--blue);background:var(--blue-p);}
+.kpi.green-h{border-color:var(--green);background:var(--green-p);}
+.kpi.red-h{border-color:var(--red);background:var(--red-p);}
+.kpi.gold-h{border-color:rgba(155,122,69,.4);background:var(--gold-p);}
+.kpi-label{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.kpi-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;line-height:1;color:var(--text);}
+.kpi-val.blue{color:var(--blue);}
+.kpi-val.green{color:var(--green);}
+.kpi-val.red{color:var(--red);}
+.kpi-val.gold{color:var(--gold);}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* TABLES */
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid #E0E0E0;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead tr{background:#F8F9FA;}
+th{padding:10px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid #E0E0E0;}
+td{padding:9px 14px;border-bottom:1px solid #F0F2F5;color:var(--text);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#F8F9FA;}
+.td-right{text-align:right;}
+.td-center{text-align:center;}
+td.pos{color:var(--green);font-weight:500;}
+td.neg{color:var(--red);font-weight:500;}
+td.neutral{color:var(--gold);font-weight:500;}
+.highlight-row td{background:#EAF1FB;font-weight:500;}
+
+/* BANK CARDS */
+.bank-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:16px;}
+.bank-card{background:#FFFFFF;border:1px solid #E0E0E0;border-radius:8px;padding:16px;transition:all .2s;cursor:pointer;}
+.bank-card:hover{border-color:var(--blue);box-shadow:0 2px 8px rgba(26,115,232,0.12);}
+.bank-card.selected{border-color:var(--blue);background:var(--blue-p);box-shadow:0 2px 8px rgba(26,115,232,0.15);}
+.bank-logo{font-size:24px;margin-bottom:8px;}
+.bank-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.bank-rate{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--blue);}
+.bank-rate span{font-size:13px;font-weight:400;}
+.bank-details{margin-top:10px;display:flex;flex-direction:column;gap:4px;}
+.bank-detail-row{display:flex;justify-content:space-between;font-size:11px;}
+.bank-detail-row .label{color:var(--muted);}
+.bank-detail-row .val{font-weight:500;color:var(--text);}
+.bank-badge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:10px;margin-top:6px;font-weight:500;letter-spacing:.05em;}
+.badge-pref{background:rgba(30,142,62,.1);color:var(--green);}
+.badge-std{background:rgba(26,115,232,.1);color:var(--blue);}
+.badge-ext{background:rgba(155,122,69,.1);color:var(--gold);}
+
+/* INFO BOXES */
+.info-box{background:#EAF1FB;border:1px solid rgba(26,115,232,.25);border-radius:6px;padding:12px 16px;margin-bottom:12px;}
+.info-box.warning{background:#FFF8E1;border-color:rgba(227,116,0,.25);}
+.info-box.success{background:rgba(30,142,62,.06);border-color:rgba(30,142,62,.25);}
+.info-box .info-title{font-size:11px;font-weight:600;color:var(--blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;}
+.info-box.warning .info-title{color:var(--orange);}
+.info-box.success .info-title{color:var(--green);}
+.info-box p{font-size:12px;color:var(--text);line-height:1.7;}
+
+/* CHART */
+.chart-card{background:#FFFFFF;border:1px solid #E0E0E0;border-radius:8px;padding:16px;}
+.chart-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.chart-wrap{position:relative;height:220px;}
+
+/* COMPARISON TABLE */
+.comparison-section{margin-top:16px;}
+.comp-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+
+/* DESEMBOLSO BARS */
+.desem-bar{height:6px;background:#E8EAED;border-radius:3px;margin-top:4px;}
+.desem-fill{height:100%;border-radius:3px;transition:width .4s;}
+
+/* AMORTIZATION toggle */
+.toggle-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid #DADCE0;background:#FFFFFF;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;border-radius:4px;transition:all .2s;}
+.toggle-btn:hover{border-color:var(--blue);color:var(--blue);}
+.toggle-btn.active{background:var(--blue);color:#FFFFFF;border-color:var(--blue);}
+
+/* LEY PREF box */
+.ley-pref{background:rgba(30,142,62,.06);border:1px solid rgba(30,142,62,.25);border-radius:8px;padding:14px 18px;margin:12px 0;}
+.ley-pref-title{font-size:11px;font-weight:700;color:var(--green);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;}
+.ley-pref-row{display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid rgba(30,142,62,.12);}
+.ley-pref-row:last-child{border-bottom:none;}
+.ley-range{font-size:12px;color:var(--text);flex:1;}
+.ley-subsidy{font-size:12px;font-weight:600;color:var(--green);}
+.ley-eff{font-size:11px;color:var(--muted);}
+
+/* REQUIREMENTS */
+.req-list{display:flex;flex-direction:column;gap:6px;}
+.req-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text);}
+.req-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:5px;}
+
+/* PRINT */
+@media print{.nav,.main-tabs{display:none;}.tab-content.active{padding:0;}.bank-card{page-break-inside:avoid;}}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:#F8F9FA;}
+::-webkit-scrollbar-thumb{background:#BDC1C6;border-radius:3px;}
+@media(max-width:900px){.results-layout{grid-template-columns:1fr;}.kpi-row-4{grid-template-columns:repeat(2,1fr);}.field-grid{grid-template-columns:1fr 1fr;}.bank-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <div class="nav-logo">RED <span>ACADEMY</span></div>
+    <div class="nav-badge">Simulador de Financiamiento</div>
+  </div>
+  <button onclick="window.print()" style="padding:7px 16px;font-size:11px;font-weight:500;background:#1A73E8;color:#FFF;border:none;border-radius:4px;cursor:pointer;font-family:'Outfit',sans-serif;">Exportar PDF</button>
+</nav>
+
+<!-- MAIN TABS -->
+<div class="main-tabs">
+  <div class="main-tab active" onclick="switchMainTab('dev',this)">
+    <span class="tab-icon">🏗</span> Crédito Constructor — Para Desarrolladores
+  </div>
+  <div class="main-tab" onclick="switchMainTab('buyer',this)">
+    <span class="tab-icon">🏠</span> Hipoteca Residencial — Para Compradores
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     TAB 1: DESARROLLADOR
+══════════════════════════════════════════════════════════ -->
+<div class="tab-content active" id="tab-dev">
+<div style="max-width:1400px;margin:0 auto;">
+
+  <div class="info-box" style="margin-bottom:16px;">
+    <div class="info-title">💼 Crédito Constructor / Promotor — ¿Qué es?</div>
+    <p>El crédito constructor es una línea de crédito rotativa que el banco desembolsa por avance de obra al desarrollador. A diferencia de una hipoteca, los intereses se pagan mensualmente solo sobre el monto desembolsado. Al terminar la obra, el crédito se cancela con el producto de las ventas o se convierte en hipotecas individuales para los compradores.</p>
+  </div>
+
+  <!-- INPUTS -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+    <div class="card">
+      <div class="card-title"><span>📋</span> Datos del proyecto</div>
+      <div class="field-grid">
+        <div class="field"><label>Nombre del proyecto</label><input type="text" id="d-nombre" value="Villa Paradise — Ocean Hills" oninput="calcDev()"></div>
+        <div class="field"><label>Inversión total del proyecto</label><input type="number" id="d-inversion" value="1109040" step="1000" oninput="calcDev()"></div>
+        <div class="field"><label>% Financiado por el banco</label><input type="number" id="d-ltv" value="60" min="0" max="80" step="5" oninput="calcDev()"></div>
+        <div class="field"><label>Tipo de crédito</label>
+          <select id="d-tipo" onchange="calcDev()">
+            <option value="constructor">Crédito constructor (avance de obra)</option>
+            <option value="rotativa">Línea rotativa de crédito</option>
+            <option value="hipotecario">Crédito hipotecario comercial</option>
+          </select>
+        </div>
+        <div class="field"><label>Preventas confirmadas (%)</label><input type="number" id="d-preventa" value="30" min="0" max="100" oninput="calcDev()"></div>
+        <div class="field"><label>Plazo de construcción (meses)</label><input type="number" id="d-plazo" value="14" min="1" oninput="calcDev()"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>🏦</span> Condiciones bancarias</div>
+      <div class="field-grid">
+        <div class="field"><label>Banco</label>
+          <select id="d-banco" onchange="loadDevBankRate()">
+            <option value="9.0">Banco General (9.0%)</option>
+            <option value="9.25">Banistmo (9.25%)</option>
+            <option value="8.5">Banco Nacional (8.5%)</option>
+            <option value="9.5">Credicorp Bank (9.5%)</option>
+            <option value="9.0">Global Bank (9.0%)</option>
+            <option value="9.25">Multibank (9.25%)</option>
+            <option value="9.5">Capital Bank (9.5%)</option>
+            <option value="custom">Tasa personalizada</option>
+          </select>
+        </div>
+        <div class="field"><label>Tasa de interés anual (%)</label><input type="number" id="d-tasa" value="9.0" step="0.25" oninput="calcDev()"></div>
+        <div class="field"><label>Comisión de apertura (%)</label><input type="number" id="d-comision" value="1.5" step="0.25" oninput="calcDev()"></div>
+        <div class="field"><label>Gastos legales y registro</label><input type="number" id="d-gastos-legales" value="3500" step="100" oninput="calcDev()"></div>
+        <div class="field"><label>Seguro de construcción anual (%)</label><input type="number" id="d-seguro" value="0.35" step="0.05" oninput="calcDev()"></div>
+        <div class="field"><label>% Desembolso inicial (mes 1)</label><input type="number" id="d-desembolso-ini" value="20" min="5" max="50" oninput="calcDev()"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-layout">
+  <div>
+    <!-- KPIs -->
+    <div class="kpi-row kpi-row-4" style="margin-bottom:16px;">
+      <div class="kpi highlight">
+        <div class="kpi-label">Monto del crédito</div>
+        <div class="kpi-val blue" id="d-kpi-monto">$0</div>
+        <div class="kpi-sub" id="d-kpi-monto-sub">60% del proyecto</div>
+      </div>
+      <div class="kpi gold-h">
+        <div class="kpi-label">Capital propio requerido</div>
+        <div class="kpi-val gold" id="d-kpi-equity">$0</div>
+        <div class="kpi-sub" id="d-kpi-equity-sub">40% del proyecto</div>
+      </div>
+      <div class="kpi red-h">
+        <div class="kpi-label">Total intereses estimados</div>
+        <div class="kpi-val red" id="d-kpi-intereses">$0</div>
+        <div class="kpi-sub" id="d-kpi-int-sub">Intereses en curso</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Costo total financiamiento</div>
+        <div class="kpi-val" id="d-kpi-costo-total">$0</div>
+        <div class="kpi-sub">Intereses + comisión + seguros</div>
+      </div>
+    </div>
+    <div class="kpi-row kpi-row-4" style="margin-bottom:16px;">
+      <div class="kpi">
+        <div class="kpi-label">Comisión de apertura</div>
+        <div class="kpi-val gold" id="d-kpi-comision">$0</div>
+        <div class="kpi-sub" id="d-kpi-com-sub">Al momento del desembolso</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Seguros de construcción</div>
+        <div class="kpi-val" id="d-kpi-seguro">$0</div>
+        <div class="kpi-sub">Durante el plazo de obra</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Gastos legales y registro</div>
+        <div class="kpi-val" id="d-kpi-legal">$0</div>
+        <div class="kpi-sub">Hipoteca, registro, escritura</div>
+      </div>
+      <div class="kpi green-h">
+        <div class="kpi-label">% Costo del crédito</div>
+        <div class="kpi-val green" id="d-kpi-pct-costo">0%</div>
+        <div class="kpi-sub">Sobre inversión total</div>
+      </div>
+    </div>
+
+    <!-- DESEMBOLSO SCHEDULE -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title"><span>📅</span> Cronograma de desembolsos e intereses en curso</div>
+      <div class="info-box" style="margin-bottom:12px;">
+        <div class="info-title">Cómo funciona el crédito constructor</div>
+        <p>El banco desembolsa el crédito por partes según el avance físico de la obra verificado por su inspector. Los intereses se pagan mensualmente <strong>solo sobre el saldo desembolsado</strong> — no sobre el monto total aprobado. Esto significa que los primeros meses pagan menos intereses y van aumentando conforme avanza la obra.</p>
+      </div>
+      <div class="table-wrap">
+        <table id="d-schedule-table">
+          <thead><tr>
+            <th>Mes</th><th>% Avance</th><th>Desembolso mes</th><th>Saldo acum.</th><th>Interés mensual</th><th>Interés acum.</th><th>Seguro mensual</th>
+          </tr></thead>
+          <tbody id="d-schedule-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- REQUISITOS DEL BANCO -->
+    <div class="card">
+      <div class="card-title"><span>📄</span> Requisitos típicos del banco para crédito constructor</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Documentos del proyecto</div>
+          <div class="req-list">
+            <div class="req-item"><div class="req-dot"></div>Análisis de factibilidad completo con flujo de caja</div>
+            <div class="req-item"><div class="req-dot"></div>Estudio de mercado con absorción histórica verificada</div>
+            <div class="req-item"><div class="req-dot"></div>Presupuesto de construcción con cotizaciones firmadas</div>
+            <div class="req-item"><div class="req-dot"></div>Planos arquitectónicos aprobados o en trámite</div>
+            <div class="req-item"><div class="req-dot"></div>Cronograma de obra detallado por fase</div>
+            <div class="req-item"><div class="req-dot"></div>Preventas confirmadas: contratos firmados (20-40%)</div>
+            <div class="req-item"><div class="req-dot"></div>Título del terreno libre de gravámenes</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Documentos del desarrollador</div>
+          <div class="req-list">
+            <div class="req-item"><div class="req-dot"></div>Declaración de renta últimos 2-3 años</div>
+            <div class="req-item"><div class="req-dot"></div>Estados financieros auditados de la empresa</div>
+            <div class="req-item"><div class="req-dot"></div>Récord de crédito limpio (no en listas negras)</div>
+            <div class="req-item"><div class="req-dot"></div>Trayectoria: proyectos entregados y referencias</div>
+            <div class="req-item"><div class="req-dot"></div>Escrituras de activos propios como garantía adicional</div>
+            <div class="req-item"><div class="req-dot"></div>Aval personal de los socios (en proyectos medianos)</div>
+            <div class="req-item"><div class="req-dot"></div>Seguro de construcción (CAR) y responsabilidad civil</div>
+          </div>
+        </div>
+      </div>
+      <div class="info-box warning" style="margin-top:14px;">
+        <div class="info-title">⚠ Indicadores que evalúa el banco</div>
+        <p><strong>LTV (Loan-to-Value):</strong> El banco financia hasta el 65-75% del valor de tasación del proyecto terminado — NO del costo de construcción. | <strong>DSCR (Cobertura de deuda):</strong> Los ingresos proyectados deben cubrir 1.2x-1.5x el servicio de la deuda. | <strong>Preventa mínima:</strong> La mayoría de bancos exigen 20-35% del inventario vendido antes de desembolsar.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div>
+    <div class="chart-card" style="margin-bottom:16px;">
+      <div class="chart-title">Distribución del costo financiero</div>
+      <div class="chart-wrap"><canvas id="d-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>🏦</span> Tasas referenciales 2025 — Crédito constructor</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;padding:4px 0;border-bottom:1px solid #E0E0E0;">
+          <span>Banco</span><span style="text-align:center">Tasa</span><span style="text-align:center">LTV máx.</span>
+        </div>
+        ${[
+          ['Banco Nacional','8.5%','70%','Estatal'],
+          ['Banco General','9.0%','70%','Privado'],
+          ['Global Bank','9.0%','65%','Privado'],
+          ['Multibank','9.25%','65%','Privado'],
+          ['Banistmo','9.25%','70%','Privado'],
+          ['Capital Bank','9.5%','65%','Privado'],
+          ['Credicorp Bank','9.5%','65%','Privado'],
+          ['La Hipotecaria','9.0-10%','70%','Especializado'],
+        ].map(([b,t,l,tipo])=>`
+        <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;font-size:12px;padding:7px 0;border-bottom:1px solid #F0F2F5;align-items:center;">
+          <span>${b}</span>
+          <span style="text-align:center;font-weight:600;color:var(--blue)">${t}</span>
+          <span style="text-align:center;color:var(--muted)">${l}</span>
+        </div>`).join('')}
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:10px;font-style:italic;">Tasas referenciales Q4 2025. Verificar condiciones vigentes directamente con cada banco.</div>
+    </div>
+  </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     TAB 2: COMPRADOR (HIPOTECA)
+══════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-buyer">
+<div style="max-width:1400px;margin:0 auto;">
+
+  <!-- LEY PREFERENCIAL BOX -->
+  <div class="ley-pref">
+    <div class="ley-pref-title">📗 Ley de Interés Preferencial — Panamá (Ley No. 3 de 1985 y sus reformas)</div>
+    <p style="font-size:12px;color:var(--text);margin-bottom:10px;">El Estado subsidia parte de los intereses hipotecarios en vivienda nueva destinada a residencia principal. <strong>Tasa de referencia Q4 2025: 6.50%</strong> (ajustada por la Superintendencia de Bancos de Panamá). Solo aplica a panameños con residencia permanente. No aplica a segunda vivienda, propiedades comerciales ni de recreo.</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+      <div class="ley-pref-row" style="flex-direction:column;gap:4px;border:1px solid rgba(30,142,62,.2);border-radius:6px;padding:10px 12px;">
+        <div style="font-size:11px;font-weight:600;color:var(--green);">Hasta $80,000</div>
+        <div style="font-size:20px;font-weight:300;color:var(--green);font-family:'Cormorant Garamond',serif;">~1.5 – 2%</div>
+        <div style="font-size:10px;color:var(--muted);">Estado subsidia hasta 85% de la tasa</div>
+      </div>
+      <div class="ley-pref-row" style="flex-direction:column;gap:4px;border:1px solid rgba(30,142,62,.2);border-radius:6px;padding:10px 12px;">
+        <div style="font-size:11px;font-weight:600;color:var(--green);">$80,001 – $120,000</div>
+        <div style="font-size:20px;font-weight:300;color:var(--green);font-family:'Cormorant Garamond',serif;">~2.5 – 3.5%</div>
+        <div style="font-size:10px;color:var(--muted);">Estado subsidia hasta 50-60% de la tasa</div>
+      </div>
+      <div class="ley-pref-row" style="flex-direction:column;gap:4px;border:1px solid rgba(26,115,232,.2);border-radius:6px;padding:10px 12px;">
+        <div style="font-size:11px;font-weight:600;color:var(--blue);">$120,001 en adelante</div>
+        <div style="font-size:20px;font-weight:300;color:var(--blue);font-family:'Cormorant Garamond',serif;">6.5% – 8%</div>
+        <div style="font-size:10px;color:var(--muted);">Sin subsidio del Estado. Tasa de mercado.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INPUTS -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+    <div class="card">
+      <div class="card-title"><span>🏠</span> Datos de la vivienda</div>
+      <div class="field-grid">
+        <div class="field"><label>Precio de la vivienda</label><input type="number" id="h-precio" value="250000" step="5000" oninput="calcHipoteca()"></div>
+        <div class="field"><label>Prima / Abono inicial</label><input type="number" id="h-prima" value="50000" step="1000" oninput="calcHipoteca()"></div>
+        <div class="field"><label>% Prima (calculado)</label><input type="number" id="h-prima-pct" value="20" step="1" oninput="calcFromPct()" style="background:#F8F9FA;"></div>
+        <div class="field"><label>Plazo del préstamo (años)</label>
+          <select id="h-plazo" onchange="calcHipoteca()">
+            <option value="10">10 años</option>
+            <option value="15">15 años</option>
+            <option value="20">20 años</option>
+            <option value="25">25 años</option>
+            <option value="30" selected>30 años</option>
+          </select>
+        </div>
+        <div class="field"><label>Tipo de vivienda</label>
+          <select id="h-tipo-vivienda" onchange="checkLeyPref()">
+            <option value="nueva_principal">Nueva — Residencia principal</option>
+            <option value="usada">Usada / Segunda mano</option>
+            <option value="segunda">Segunda vivienda / Recreo</option>
+            <option value="extranjero">Comprador extranjero (sin residencia)</option>
+          </select>
+        </div>
+        <div class="field"><label>Nacionalidad / Residencia</label>
+          <select id="h-nacionalidad" onchange="calcHipoteca()">
+            <option value="panamenio">Panameño / Residente permanente</option>
+            <option value="extranjero">Extranjero sin residencia permanente</option>
+          </select>
+        </div>
+      </div>
+      <div id="ley-pref-alert" class="info-box success" style="margin-top:12px;display:none;">
+        <div class="info-title">✅ Aplica Ley de Interés Preferencial</div>
+        <p id="ley-pref-text">Esta vivienda califica para el subsidio del Estado.</p>
+      </div>
+      <div id="feci-alert" class="info-box warning" style="margin-top:12px;display:none;">
+        <div class="info-title">⚠ Aplica FECI (+1% adicional)</div>
+        <p>Los compradores extranjeros sin residencia permanente en Panamá deben pagar el FECI (Fondo Especial de Compensación de Intereses): 1% adicional anual sobre el saldo del préstamo.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>🏦</span> Banco seleccionado</div>
+      <div class="field-grid" style="margin-bottom:12px;">
+        <div class="field"><label>Banco</label>
+          <select id="h-banco-sel" onchange="selectBankFromDropdown()">
+            <option value="0">-- Seleccionar banco --</option>
+            <option value="1">Banco General</option>
+            <option value="2">Banistmo</option>
+            <option value="3">Banco Nacional de Panamá</option>
+            <option value="4">Caja de Ahorros</option>
+            <option value="5">Multibank</option>
+            <option value="6">Global Bank</option>
+            <option value="7">Credicorp Bank</option>
+            <option value="8">Capital Bank</option>
+            <option value="9">La Hipotecaria</option>
+            <option value="10">Banesco Panamá</option>
+          </select>
+        </div>
+        <div class="field"><label>Tasa de interés anual (%)</label><input type="number" id="h-tasa" value="7.0" step="0.25" oninput="calcHipoteca()"></div>
+        <div class="field"><label>Seguro de vida (% anual del saldo)</label><input type="number" id="h-seg-vida" value="0.35" step="0.05" oninput="calcHipoteca()"></div>
+        <div class="field"><label>Seguro de incendio (% anual del valor)</label><input type="number" id="h-seg-incendio" value="0.12" step="0.02" oninput="calcHipoteca()"></div>
+      </div>
+      <!-- KPIs banco -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px;">
+        <div style="background:#F8F9FA;border:1px solid #E0E0E0;border-radius:6px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">Monto préstamo</div>
+          <div style="font-size:18px;font-weight:400;color:var(--blue);font-family:'Cormorant Garamond',serif;" id="h-kpi-monto">$0</div>
+        </div>
+        <div style="background:#F8F9FA;border:1px solid #E0E0E0;border-radius:6px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">Cuota mensual</div>
+          <div style="font-size:18px;font-weight:400;color:var(--green);font-family:'Cormorant Garamond',serif;" id="h-kpi-cuota">$0</div>
+        </div>
+        <div style="background:#F8F9FA;border:1px solid #E0E0E0;border-radius:6px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:3px;">Cuota total (con seguros)</div>
+          <div style="font-size:18px;font-weight:400;color:var(--text);font-family:'Cormorant Garamond',serif;" id="h-kpi-cuota-total">$0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAILED KPIs -->
+  <div class="kpi-row" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px;">
+    <div class="kpi highlight">
+      <div class="kpi-label">Cuota capital + interés</div>
+      <div class="kpi-val blue" id="h-kpi-ci">$0</div>
+      <div class="kpi-sub">Mensual (amortización)</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Seguro de vida</div>
+      <div class="kpi-val" id="h-kpi-sv">$0</div>
+      <div class="kpi-sub">Mensual (decrece)</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Seguro de incendio</div>
+      <div class="kpi-val" id="h-kpi-si">$0</div>
+      <div class="kpi-sub">Mensual (fijo)</div>
+    </div>
+    <div class="kpi red-h">
+      <div class="kpi-label">Total intereses pagados</div>
+      <div class="kpi-val red" id="h-kpi-int-total">$0</div>
+      <div class="kpi-sub" id="h-kpi-int-sub">En toda la vida del crédito</div>
+    </div>
+    <div class="kpi gold-h">
+      <div class="kpi-label">Costo total de la vivienda</div>
+      <div class="kpi-val gold" id="h-kpi-costo-total">$0</div>
+      <div class="kpi-sub">Prima + intereses + seguros</div>
+    </div>
+  </div>
+
+  <!-- GASTOS INICIALES -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title"><span>💰</span> Gastos de cierre — Lo que pagas al momento de escriturar</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;" id="h-gastos-wrap"></div>
+    <div class="info-box warning" style="margin-top:14px;">
+      <div class="info-title">⚠ Importante: gastos de cierre en Panamá</div>
+      <p>Además de la prima, debes tener disponibles los gastos de cierre: impuesto de transferencia 2%, gastos legales y notariales, avalúo bancario y comisión de manejo. <strong>Estima entre el 3-5% adicional del precio de venta</strong> para cubrir todos los gastos de cierre. Estos no están incluidos en el monto del préstamo.</p>
+    </div>
+  </div>
+
+  <!-- BANK COMPARISON -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title"><span>🏦</span> Comparación entre bancos — Tasas y cuotas para tu perfil</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Haz clic en cualquier banco para seleccionarlo y recalcular automáticamente.</div>
+    <div class="bank-grid" id="bank-grid"></div>
+  </div>
+
+  <!-- FULL COMPARISON TABLE -->
+  <div class="card" style="margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="card-title" style="margin:0;"><span>📊</span> Tabla comparativa completa — Todos los bancos</div>
+      <button class="toggle-btn" onclick="toggleAmort()" id="amort-toggle">Ver tabla de amortización</button>
+    </div>
+    <div id="comparison-table-wrap"></div>
+    <div id="amort-table-wrap" style="display:none;margin-top:16px;"></div>
+  </div>
+
+  <!-- CHART -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="chart-card">
+      <div class="chart-title">Distribución del pago mensual</div>
+      <div class="chart-wrap"><canvas id="h-chart-cuota"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Capital vs. Intereses acumulados en el tiempo</div>
+      <div class="chart-wrap"><canvas id="h-chart-amort"></canvas></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════
+const G = id => parseFloat(document.getElementById(id)?.value)||0;
+const S = (id,v) => { if(document.getElementById(id)) document.getElementById(id).value=v; };
+const fmt = n => '$'+Math.abs(Math.round(n)).toLocaleString('en-US');
+const fmtP = n => n.toFixed(2)+'%';
+
+// Bank data: [name, logo, rate_normal, rate_pref_80, rate_pref_120, ltv_max, plazo_max, notas]
+const BANKS = [
+  {id:1, name:'Banco General',  logo:'🏛', rate:7.25, pref80:2.0, pref120:3.5, ltv:95, plazo:30, nota:'Financia hasta 98% en algunos casos. 50% dto. en comisión de manejo.'},
+  {id:2, name:'Banistmo',       logo:'🏦', rate:7.50, pref80:2.25,pref120:3.75,ltv:95, plazo:30, nota:'Beneficios especiales para clientes con planilla.'},
+  {id:3, name:'Banco Nacional', logo:'🇵🇦', rate:6.75, pref80:1.75,pref120:3.25,ltv:95, plazo:30, nota:'Banco estatal. Tasas más bajas del mercado en general.'},
+  {id:4, name:'Caja de Ahorros',logo:'💼', rate:7.0,  pref80:1.9, pref120:3.4, ltv:95, plazo:30, nota:'Banco estatal. Especializado en vivienda social.'},
+  {id:5, name:'Multibank',      logo:'🏢', rate:7.50, pref80:2.25,pref120:3.75,ltv:90, plazo:30, nota:'Proceso digital ágil. Precalificación en línea.'},
+  {id:6, name:'Global Bank',    logo:'🌐', rate:7.25, pref80:2.0, pref120:3.5, ltv:90, plazo:25, nota:'Exoneración de gastos de cierre en algunas promociones.'},
+  {id:7, name:'Credicorp Bank', logo:'💳', rate:7.75, pref80:2.5, pref120:4.0, ltv:85, plazo:25, nota:'Servicio personalizado para clientes premium.'},
+  {id:8, name:'Capital Bank',   logo:'🏗', rate:7.50, pref80:2.25,pref120:3.75,ltv:85, plazo:25, nota:'Opciones especiales para desarrolladores y sus compradores.'},
+  {id:9, name:'La Hipotecaria', logo:'🏠', rate:7.50, pref80:2.0, pref120:3.5, ltv:90, plazo:30, nota:'Especialista en crédito hipotecario en Panamá.'},
+  {id:10,name:'Banesco Panamá', logo:'🔶', rate:8.0,  pref80:2.5, pref120:4.0, ltv:80, plazo:25, nota:'Banco venezolano con fuerte presencia en Panamá.'},
+];
+
+let selectedBankId = 1;
+let devChart=null, hChartCuota=null, hChartAmort=null;
+let showAmort=false;
+
+// ══════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════════════════════
+function switchMainTab(id, el){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════════════
+// DEVELOPER TAB
+// ══════════════════════════════════════════════════════════════
+function loadDevBankRate(){
+  const sel = document.getElementById('d-banco');
+  const val = sel.value;
+  if(val !== 'custom') S('d-tasa', val);
+  calcDev();
+}
+
+function calcDev(){
+  const inversion = G('d-inversion');
+  const ltvPct = G('d-ltv')/100;
+  const tasa = G('d-tasa')/100;
+  const meses = Math.round(G('d-plazo'));
+  const comPct = G('d-comision')/100;
+  const segPct = G('d-seguro')/100;
+  const gasLeg = G('d-gastos-legales');
+  const desIniPct = G('d-desembolso-ini')/100;
+
+  const monto = inversion * ltvPct;
+  const equity = inversion - monto;
+  const comisionApertura = monto * comPct;
+  const tasaMensual = tasa/12;
+
+  // Desembolso schedule: ini pct in month 1, then ratable over remaining months
+  const desembolsos = [];
+  const desIni = monto * desIniPct;
+  const desPorMes = (monto - desIni) / Math.max(meses-1, 1);
+
+  let saldo = 0, intTotal = 0, segTotal = 0;
+  const rows = [];
+
+  for(let m=1; m<=meses; m++){
+    const desem = m===1 ? desIni : desPorMes;
+    saldo += desem;
+    const int = saldo * tasaMensual;
+    const seg = saldo * (segPct/12);
+    intTotal += int;
+    segTotal += seg;
+    rows.push({m, pct:Math.round(saldo/monto*100), desem, saldo, int, intAcum:intTotal, seg});
+  }
+
+  const costoTotal = comisionApertura + intTotal + segTotal + gasLeg;
+  const pctCosto = inversion>0 ? costoTotal/inversion*100 : 0;
+
+  // Update KPIs
+  document.getElementById('d-kpi-monto').textContent = fmt(monto);
+  document.getElementById('d-kpi-monto-sub').textContent = `${G('d-ltv')}% del proyecto`;
+  document.getElementById('d-kpi-equity').textContent = fmt(equity);
+  document.getElementById('d-kpi-equity-sub').textContent = `${100-G('d-ltv')}% capital propio`;
+  document.getElementById('d-kpi-intereses').textContent = fmt(intTotal);
+  document.getElementById('d-kpi-int-sub').textContent = `${meses} meses de obra`;
+  document.getElementById('d-kpi-costo-total').textContent = fmt(costoTotal);
+  document.getElementById('d-kpi-comision').textContent = fmt(comisionApertura);
+  document.getElementById('d-kpi-com-sub').textContent = `${G('d-comision')}% del crédito`;
+  document.getElementById('d-kpi-seguro').textContent = fmt(segTotal);
+  document.getElementById('d-kpi-legal').textContent = fmt(gasLeg);
+  document.getElementById('d-kpi-pct-costo').textContent = fmtP(pctCosto);
+
+  // Schedule table
+  const tbody = document.getElementById('d-schedule-body');
+  tbody.innerHTML = rows.map((r,i)=>`
+    <tr class="${i===meses-1?'highlight-row':''}">
+      <td><strong>Mes ${r.m}</strong></td>
+      <td class="td-center">
+        <div style="font-size:11px;margin-bottom:3px;">${r.pct}%</div>
+        <div class="desem-bar"><div class="desem-fill" style="width:${r.pct}%;background:#1A73E8;"></div></div>
+      </td>
+      <td class="td-right pos">${fmt(r.desem)}</td>
+      <td class="td-right" style="font-weight:500">${fmt(r.saldo)}</td>
+      <td class="td-right neg">${fmt(r.int)}</td>
+      <td class="td-right">${fmt(r.intAcum)}</td>
+      <td class="td-right" style="color:var(--orange)">${fmt(r.seg)}</td>
+    </tr>`).join('');
+
+  // Chart
+  if(devChart){ devChart.data.datasets[0].data=[comisionApertura,intTotal,segTotal,gasLeg]; devChart.update(); return; }
+  devChart=new Chart(document.getElementById('d-chart'),{
+    type:'doughnut',
+    data:{labels:['Comisión apertura','Intereses en curso','Seguros de construcción','Gastos legales'],
+      datasets:[{data:[comisionApertura,intTotal,segTotal,gasLeg],backgroundColor:['#D93025','#E37400','#1A73E8','#9B7A45'],borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{display:true,position:'bottom',labels:{color:'#5F6368',font:{size:10},boxWidth:10,padding:10}},
+        tooltip:{callbacks:{label:d=>' '+fmt(d.raw)}}}}
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// HIPOTECA TAB
+// ══════════════════════════════════════════════════════════════
+function calcFromPct(){
+  const precio = G('h-precio');
+  const pct = G('h-prima-pct');
+  S('h-prima', Math.round(precio * pct/100));
+  calcHipoteca();
+}
+
+function selectBankFromDropdown(){
+  const id = parseInt(document.getElementById('h-banco-sel').value);
+  if(id>0){ selectedBankId = id; applyBank(id); }
+  calcHipoteca();
+}
+
+function applyBank(id){
+  const bank = BANKS.find(b=>b.id===id);
+  if(!bank) return;
+  const precio = G('h-precio');
+  const tipo = document.getElementById('h-tipo-vivienda').value;
+  const nac = document.getElementById('h-nacionalidad').value;
+  let rate = bank.rate;
+  if(tipo==='nueva_principal' && nac==='panamenio'){
+    if(precio<=80000) rate=bank.pref80;
+    else if(precio<=120000) rate=bank.pref120;
+  }
+  if(nac==='extranjero') rate += 1.0; // FECI
+  S('h-tasa', rate);
+  // Update bank cards
+  document.querySelectorAll('.bank-card').forEach(c=>{ c.classList.remove('selected'); if(parseInt(c.dataset.id)===id) c.classList.add('selected'); });
+  S('h-banco-sel', id);
+}
+
+function checkLeyPref(){
+  const tipo = document.getElementById('h-tipo-vivienda').value;
+  const nac = document.getElementById('h-nacionalidad').value;
+  const precio = G('h-precio');
+  const alert1 = document.getElementById('ley-pref-alert');
+  const alert2 = document.getElementById('feci-alert');
+  
+  const eligiblePref = tipo==='nueva_principal' && nac==='panamenio' && precio<=120000;
+  alert1.style.display = eligiblePref?'block':'none';
+  alert2.style.display = nac==='extranjero'?'block':'none';
+  
+  if(eligiblePref){
+    const t = document.getElementById('ley-pref-text');
+    t.textContent = precio<=80000 
+      ? `Vivienda hasta $80,000: la tasa efectiva es ~1.5-2%. El Estado subsidia hasta el 85% de los intereses bancarios.`
+      : `Vivienda hasta $120,000: la tasa efectiva es ~2.5-3.5%. El Estado subsidia una parte significativa de los intereses.`;
+  }
+  calcHipoteca();
+}
+
+function getEffectiveRate(bank, precio, tipo, nac){
+  let rate = bank.rate;
+  if(tipo==='nueva_principal' && nac==='panamenio'){
+    if(precio<=80000) rate=bank.pref80;
+    else if(precio<=120000) rate=bank.pref120;
+  }
+  if(nac==='extranjero') rate+=1.0;
+  return rate;
+}
+
+function calcMonthlyPayment(principal, annualRate, months){
+  if(annualRate===0) return principal/months;
+  const r = annualRate/100/12;
+  return principal * r * Math.pow(1+r,months) / (Math.pow(1+r,months)-1);
+}
+
+function calcHipoteca(){
+  const precio = G('h-precio');
+  const prima = G('h-prima');
+  // Sync pct
+  if(precio>0){ S('h-prima-pct', ((prima/precio)*100).toFixed(1)); }
+  
+  const monto = precio - prima;
+  const plazoAnios = G('h-plazo');
+  const plazoMeses = plazoAnios * 12;
+  const tasa = G('h-tasa');
+  const segVidaPct = G('h-seg-vida')/100/12;
+  const segIncendioPct = G('h-seg-incendio')/100/12;
+  const tipo = document.getElementById('h-tipo-vivienda').value;
+  const nac = document.getElementById('h-nacionalidad').value;
+  
+  const cuotaCI = calcMonthlyPayment(monto, tasa, plazoMeses);
+  const segVidaMes = monto * segVidaPct;
+  const segIncendioMes = precio * segIncendioPct;
+  const cuotaTotal = cuotaCI + segVidaMes + segIncendioMes;
+  
+  // Totals
+  const intTotal = cuotaCI * plazoMeses - monto;
+  const segTotal = segVidaMes * plazoMeses + segIncendioMes * plazoMeses;
+  const costoTotal = prima + cuotaTotal * plazoMeses;
+  
+  // Update KPIs
+  document.getElementById('h-kpi-monto').textContent = fmt(monto);
+  document.getElementById('h-kpi-cuota').textContent = fmt(cuotaCI);
+  document.getElementById('h-kpi-cuota-total').textContent = fmt(cuotaTotal);
+  document.getElementById('h-kpi-ci').textContent = fmt(cuotaCI);
+  document.getElementById('h-kpi-sv').textContent = fmt(segVidaMes);
+  document.getElementById('h-kpi-si').textContent = fmt(segIncendioMes);
+  document.getElementById('h-kpi-int-total').textContent = fmt(intTotal);
+  document.getElementById('h-kpi-int-sub').textContent = `En ${plazoAnios} años`;
+  document.getElementById('h-kpi-costo-total').textContent = fmt(costoTotal);
+  
+  // Gastos de cierre
+  const impTransf = precio*0.02;
+  const avaluo = Math.max(350, precio*0.005);
+  const gastosLeg = Math.max(800, precio*0.012);
+  const registro = Math.max(200, precio*0.004);
+  const comMjt = Math.max(0, monto*0.01);
+  const totalCierre = impTransf+avaluo+gastosLeg+registro+comMjt;
+  
+  document.getElementById('h-gastos-wrap').innerHTML = [
+    {label:'Impuesto de transferencia 2%', val:impTransf, note:'Obligatorio — gob. panameño'},
+    {label:'Avalúo bancario', val:avaluo, note:'Tasación del bien inmueble'},
+    {label:'Gastos legales y notariales', val:gastosLeg, note:'Escritura, abogado, notaría'},
+    {label:'Registro de la propiedad', val:registro, note:'Registro Público de Panamá'},
+    {label:'Comisión de manejo bancaria', val:comMjt, note:'Varía por banco (~0.5-1%)'},
+    {label:'TOTAL GASTOS DE CIERRE', val:totalCierre, note:'Tener disponibles en efectivo', bold:true},
+  ].map(({label,val,note,bold})=>`
+    <div style="background:${bold?'#FFF8F0':'#F8F9FA'};border:1px solid ${bold?'rgba(155,122,69,.3)':'#E0E0E0'};border-radius:6px;padding:12px 14px;">
+      <div style="font-size:${bold?'12px':'11px'};font-weight:${bold?'600':'400'};color:${bold?'var(--gold)':'var(--muted)'};">${label}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:${bold?'22px':'18px'};color:${bold?'var(--gold)':'var(--text)'};font-weight:300;">${fmt(val)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;font-style:italic;">${note}</div>
+    </div>`).join('');
+  
+  // Bank cards
+  buildBankCards(precio, tipo, nac, plazoMeses, prima);
+  
+  // Comparison table
+  buildComparisonTable(precio, tipo, nac, plazoMeses, prima);
+  
+  // Charts
+  updateHipotecaCharts(cuotaCI, segVidaMes, segIncendioMes, monto, intTotal, plazoMeses, tasa);
+  
+  checkLeyPref();
+}
+
+function buildBankCards(precio, tipo, nac, plazoMeses, prima){
+  const grid = document.getElementById('bank-grid');
+  const monto = precio - prima;
+  const segVidaPct = G('h-seg-vida')/100/12;
+  const segIncendioPct = G('h-seg-incendio')/100/12;
+  
+  grid.innerHTML = BANKS.map(bank=>{
+    const rate = getEffectiveRate(bank, precio, tipo, nac);
+    const cuota = calcMonthlyPayment(monto, rate, plazoMeses);
+    const segV = monto * segVidaPct;
+    const segI = precio * segIncendioPct;
+    const cuotaTotal = cuota + segV + segI;
+    const intTotal = cuota * plazoMeses - monto;
+    const isPref = tipo==='nueva_principal' && nac==='panamenio' && precio<=120000;
+    const hasPref = isPref && rate < 5;
+    const isSelected = bank.id===selectedBankId;
+    
+    return `<div class="bank-card ${isSelected?'selected':''}" data-id="${bank.id}" onclick="selectBankCard(${bank.id})">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:18px;margin-bottom:2px;">${bank.logo}</div>
+          <div class="bank-name">${bank.name}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="bank-rate">${rate.toFixed(2)}<span>% anual</span></div>
+          ${hasPref?'<span class="bank-badge badge-pref">✓ Ley Preferencial</span>':nac==='extranjero'?'<span class="bank-badge badge-ext">+FECI incluido</span>':'<span class="bank-badge badge-std">Tasa estándar</span>'}
+        </div>
+      </div>
+      <div class="bank-details">
+        <div class="bank-detail-row"><span class="label">Cuota mensual (capital+int.)</span><span class="val" style="color:var(--green)">${fmt(cuota)}</span></div>
+        <div class="bank-detail-row"><span class="label">Cuota total (con seguros)</span><span class="val">${fmt(cuotaTotal)}</span></div>
+        <div class="bank-detail-row"><span class="label">Total intereses ${Math.round(plazoMeses/12)} años</span><span class="val" style="color:var(--red)">${fmt(intTotal)}</span></div>
+        <div class="bank-detail-row"><span class="label">LTV máximo</span><span class="val">${bank.ltv}%</span></div>
+        <div class="bank-detail-row"><span class="label">Plazo máximo</span><span class="val">${bank.plazo} años</span></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid #F0F2F5;font-style:italic;">${bank.nota}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectBankCard(id){
+  selectedBankId = id;
+  applyBank(id);
+  calcHipoteca();
+}
+
+function buildComparisonTable(precio, tipo, nac, plazoMeses, prima){
+  const monto = precio - prima;
+  const segVidaPct = G('h-seg-vida')/100/12;
+  const segIncendioPct = G('h-seg-incendio')/100/12;
+  const segV = monto * segVidaPct;
+  const segI = precio * segIncendioPct;
+  
+  const rows = BANKS.map(bank=>{
+    const rate = getEffectiveRate(bank, precio, tipo, nac);
+    const cuota = calcMonthlyPayment(monto, rate, plazoMeses);
+    const cuotaT = cuota + segV + segI;
+    const intTotal = cuota * plazoMeses - monto;
+    const costoTotal = prima + cuotaT * plazoMeses;
+    const isPref = tipo==='nueva_principal' && nac==='panamenio' && precio<=120000 && rate<5;
+    return {bank, rate, cuota, cuotaT, intTotal, costoTotal, isPref};
+  }).sort((a,b)=>a.cuotaT-b.cuotaT);
+  
+  const cheapest = rows[0].cuotaT;
+  
+  document.getElementById('comparison-table-wrap').innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Banco</th><th class="td-center">Tasa</th><th class="td-right">Cuota cap+int</th>
+          <th class="td-right">Cuota total<br><span style="font-weight:400;text-transform:none;">(con seguros)</span></th>
+          <th class="td-right">Total intereses</th><th class="td-right">Costo total vivienda</th>
+          <th class="td-center">LTV máx.</th><th class="td-center">Vs. mejor</th>
+        </tr></thead>
+        <tbody>${rows.map((r,i)=>`
+          <tr class="${r.bank.id===selectedBankId?'highlight-row':''}">
+            <td><strong>${r.bank.logo} ${r.bank.name}</strong>${r.isPref?' <span class="bank-badge badge-pref">Pref.</span>':''}</td>
+            <td class="td-center ${r.bank.id===selectedBankId?'':''}">${r.rate.toFixed(2)}%</td>
+            <td class="td-right pos">${fmt(r.cuota)}</td>
+            <td class="td-right"><strong>${fmt(r.cuotaT)}</strong></td>
+            <td class="td-right neg">${fmt(r.intTotal)}</td>
+            <td class="td-right neutral">${fmt(r.costoTotal)}</td>
+            <td class="td-center">${r.bank.ltv}%</td>
+            <td class="td-center" style="font-size:11px;">${i===0?'<span style="color:var(--green);font-weight:600;">✓ Mejor</span>':'<span style="color:var(--red);">+'+fmt(r.cuotaT-cheapest)+'/mes</span>'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function toggleAmort(){
+  showAmort = !showAmort;
+  const btn = document.getElementById('amort-toggle');
+  const wrap = document.getElementById('amort-table-wrap');
+  btn.textContent = showAmort ? 'Ocultar amortización' : 'Ver tabla de amortización';
+  btn.className = 'toggle-btn'+(showAmort?' active':'');
+  
+  if(showAmort){
+    const monto = G('h-precio') - G('h-prima');
+    const tasa = G('h-tasa');
+    const plazo = G('h-plazo')*12;
+    const cuota = calcMonthlyPayment(monto, tasa, plazo);
+    const r = tasa/100/12;
+    let saldo = monto;
+    let rows = [];
+    for(let m=1;m<=plazo;m++){
+      const int = saldo * r;
+      const cap = cuota - int;
+      saldo -= cap;
+      rows.push({m, cuota, int, cap, saldo:Math.max(0,saldo)});
+    }
+    // Show every 12th row (annual summary) plus first and last
+    const display = rows.filter((r,i)=> i===0||i===11||i===plazo-1||(i+1)%60===0);
+    wrap.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Mes</th><th class="td-right">Cuota</th><th class="td-right">Interés</th><th class="td-right">Capital</th><th class="td-right">Saldo</th><th class="td-right">% pagado</th></tr></thead>
+          <tbody>${display.map(r=>`<tr>
+            <td>${r.m}</td>
+            <td class="td-right">${fmt(r.cuota)}</td>
+            <td class="td-right neg">${fmt(r.int)}</td>
+            <td class="td-right pos">${fmt(r.cap)}</td>
+            <td class="td-right">${fmt(r.saldo)}</td>
+            <td class="td-right">${(100-r.saldo/(monto)*100).toFixed(1)}%</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px;font-style:italic;">Mostrando períodos representativos. Tabla simplificada para visualización.</div>`;
+    wrap.style.display='block';
+  } else {
+    wrap.style.display='none';
+  }
+}
+
+function updateHipotecaCharts(cuotaCI, segV, segI, monto, intTotal, plazoMeses, tasa){
+  // DONUT: cuota breakdown
+  const cData=[cuotaCI, segV, segI];
+  if(hChartCuota){ hChartCuota.data.datasets[0].data=cData; hChartCuota.update(); }
+  else hChartCuota=new Chart(document.getElementById('h-chart-cuota'),{
+    type:'doughnut',
+    data:{labels:['Capital + Interés','Seguro de vida','Seguro de incendio'],
+      datasets:[{data:cData,backgroundColor:['#1A73E8','#E37400','#9B7A45'],borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{display:true,position:'bottom',labels:{color:'#5F6368',font:{size:10},boxWidth:10,padding:8}},
+        tooltip:{callbacks:{label:d=>' '+fmt(d.raw)}}}}
+  });
+
+  // LINE: capital vs interest over time
+  const r = tasa/100/12;
+  let saldo = monto, capAcum=0, intAcum=0;
+  const labels=[], capData=[], intData=[], saldoData=[];
+  const cuota = calcMonthlyPayment(monto, tasa, plazoMeses);
+  
+  for(let m=1;m<=plazoMeses;m+=Math.max(1,Math.floor(plazoMeses/30))){
+    const int = saldo*r;
+    const cap = cuota-int;
+    intAcum+=int; capAcum+=cap; saldo-=cap;
+    labels.push('Mes '+m);
+    intData.push(Math.round(intAcum));
+    capData.push(Math.round(capAcum));
+    saldoData.push(Math.max(0,Math.round(saldo)));
+  }
+  
+  if(hChartAmort){ hChartAmort.data.labels=labels; hChartAmort.data.datasets[0].data=intData; hChartAmort.data.datasets[1].data=capData; hChartAmort.data.datasets[2].data=saldoData; hChartAmort.update(); }
+  else hChartAmort=new Chart(document.getElementById('h-chart-amort'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Interés acumulado',data:intData,borderColor:'#D93025',backgroundColor:'rgba(217,48,37,0.06)',fill:true,tension:0.4,borderWidth:2,pointRadius:0},
+      {label:'Capital amortizado',data:capData,borderColor:'#1E8E3E',backgroundColor:'rgba(30,142,62,0.06)',fill:true,tension:0.4,borderWidth:2,pointRadius:0},
+      {label:'Saldo deuda',data:saldoData,borderColor:'#1A73E8',backgroundColor:'transparent',tension:0.4,borderWidth:2,pointRadius:0,borderDash:[4,2]},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#5F6368',font:{size:10}}},tooltip:{callbacks:{label:d=>' '+fmt(d.raw)}}},
+      scales:{x:{grid:{color:'#F0F2F5'},ticks:{color:'#5F6368',font:{size:9},maxTicksLimit:8}},
+               y:{grid:{color:'#F0F2F5'},ticks:{color:'#5F6368',callback:v=>'$'+Math.round(v/1000)+'K'}}}}
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  calcDev();
+  calcHipoteca();
+});
+
+// Sync prima when precio changes
+document.getElementById('h-precio').addEventListener('input',()=>{
+  const pct = G('h-prima-pct');
+  S('h-prima', Math.round(G('h-precio')*pct/100));
+  calcHipoteca();
+});
+document.getElementById('h-prima').addEventListener('input',()=>{ calcHipoteca(); });
+document.getElementById('h-tasa').addEventListener('input',()=>{ calcHipoteca(); });
+document.getElementById('h-plazo').addEventListener('change',()=>{ calcHipoteca(); });
+document.getElementById('h-seg-vida').addEventListener('input',()=>{ calcHipoteca(); });
+document.getElementById('h-seg-incendio').addEventListener('input',()=>{ calcHipoteca(); });
+document.getElementById('h-tipo-vivienda').addEventListener('change',()=>{ checkLeyPref(); });
+document.getElementById('h-nacionalidad').addEventListener('change',()=>{ checkLeyPref(); });
+</script>
+</body>
+</html>
