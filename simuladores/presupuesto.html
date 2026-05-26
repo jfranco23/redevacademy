@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Presupuesto de Construcción — RED ACADEMY</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#9B7A45;--gold-l:#C8A857;--gold-d:#7A5C2E;--gold-p:rgba(155,122,69,0.10);
+  --bg:#FFFFFF;--bg2:#F8F9FA;--bg3:#F0F2F5;--bg4:#E8EAED;--bg5:#DFE1E5;
+  --text:#111B21;--muted:#5F6368;--faint:#D3D6DA;
+  --dim:rgba(0,0,0,0.08);--b:rgba(0,0,0,0.14);
+  --green:#1E8E3E;--green-p:rgba(30,142,62,0.08);
+  --red:#D93025;--red-p:rgba(217,48,37,0.08);
+  --blue:#1A73E8;--orange:#E37400;
+}
+body{background:#FFFFFF;color:var(--text);font-family:'Outfit',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden;}
+
+/* NAV */
+.nav{height:54px;background:#FFFFFF;border-bottom:1px solid #E0E0E0;box-shadow:0 1px 3px rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:300;}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;letter-spacing:.12em;color:var(--gold);}
+.nav-logo span{color:var(--text);font-weight:300;}
+.nav-badge{font-size:9px;letter-spacing:.18em;text-transform:uppercase;background:var(--gold-p);color:var(--gold);padding:4px 11px;border:1px solid var(--b);}
+.nav-r{display:flex;gap:8px;align-items:center;}
+.btn{padding:7px 16px;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:'Outfit',sans-serif;border:none;transition:all .2s;}
+.btn-gold{background:var(--gold);color:#080808;}
+.btn-gold:hover{background:var(--gold-l);}
+.btn-out{background:transparent;border:1px solid var(--b);color:var(--muted);}
+.btn-out:hover{border-color:var(--gold);color:var(--gold);}
+.btn-green{background:var(--green);color:#080808;}
+.btn-green:hover{opacity:.9;}
+
+/* HERO */
+.hero{background:#F8F9FA;border-bottom:1px solid #E0E0E0;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.hero-text h1{font-family:'Cormorant Garamond',serif;font-size:clamp(20px,2.5vw,30px);font-weight:300;}
+.hero-text h1 em{color:var(--gold);font-style:italic;}
+.hero-text p{font-size:12px;color:var(--muted);margin-top:4px;max-width:520px;line-height:1.6;}
+.quality-btns{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.qbtn{padding:7px 14px;font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:'Outfit',sans-serif;border:1px solid #DADCE0;background:#F0F2F5;color:var(--muted);transition:all .2s;}
+.qbtn:hover{border-color:var(--b);color:var(--text);}
+.qbtn.active{border-color:var(--gold);background:#FFF3CD;color:var(--gold);}
+.quality-label{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;}
+
+/* MAIN LAYOUT */
+.layout{display:grid;grid-template-columns:240px 1fr 340px;height:calc(100vh - 100px);}
+
+/* SIDEBAR */
+.sidebar{background:#FFFFFF;border-right:1px solid #E0E0E0;overflow-y:auto;position:sticky;top:54px;height:calc(100vh - 100px);}
+.sidebar-hdr{padding:14px 16px 10px;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid #E0E0E0;background:#F8F9FA;}
+.chap-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-left:2px solid transparent;transition:all .15s;position:relative;border-bottom:1px solid #F0F2F5;}
+.chap-item:hover{background:#F0F2F5;}
+.chap-item.active{border-left-color:#9B7A45;background:#FFF8F0;}
+.chap-item.active .chap-name{color:var(--gold);}
+.chap-num{width:28px;height:28px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0;}
+.chap-name{font-size:11px;color:var(--muted);line-height:1.3;}
+.chap-item.active .chap-name{color:var(--gold);}
+.chap-pct{position:absolute;right:10px;font-size:9px;font-weight:500;}
+.chap-bar{position:absolute;bottom:0;left:0;height:2px;background:var(--gold);opacity:.4;transition:width .3s;}
+
+/* CONTENT */
+.content{overflow-y:auto;height:calc(100vh - 100px);}
+.content-inner{padding:0;}
+
+/* PROJECT HEADER SECTION */
+.proj-section{padding:20px 24px;background:#F0F2F5;border-bottom:1px solid var(--dim);}
+.proj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px;}
+.pfield label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;}
+.pfield input,.pfield select{width:100%;background:#E8EAED;border:1px solid #DADCE0;color:var(--text);padding:8px 11px;font-family:'Outfit',sans-serif;font-size:12px;outline:none;transition:border-color .2s;}
+.pfield input:focus,.pfield select:focus{border-color:var(--gold);}
+.pfield select{cursor:pointer;}
+.pfield select option{background:#F0F2F5;}
+
+/* CHAPTER SECTION */
+.chap-section{display:none;padding:0;}
+.chap-section.active{display:block;}
+.chap-hdr{padding:16px 24px;background:#F8F9FA;border-bottom:1px solid var(--dim);display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10;}
+.chap-hdr-icon{font-size:22px;}
+.chap-hdr-info h2{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;}
+.chap-hdr-info h2 em{color:var(--gold);font-style:italic;}
+.chap-hdr-info p{font-size:11px;color:var(--muted);margin-top:2px;}
+.chap-hdr-total{margin-left:auto;text-align:right;}
+.chap-hdr-total .label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);}
+.chap-hdr-total .val{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;color:var(--gold);}
+
+/* ITEMS TABLE */
+.items-table{width:100%;padding:0 24px 16px;}
+.items-hdr{display:grid;grid-template-columns:minmax(200px,1fr) 100px 80px 110px 110px 70px;gap:8px;padding:8px 12px;background:#F0F2F5;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:14px;position:sticky;top:58px;z-index:5;}
+.item-row{display:grid;grid-template-columns:minmax(200px,1fr) 100px 80px 110px 110px 70px;gap:8px;padding:5px 12px;align-items:center;transition:background .15s;}
+.item-row:hover{background:#F0F2F5;}
+.item-row:nth-child(even){background:rgba(0,0,0,0.018);}
+.item-name{font-size:11px;color:var(--text);line-height:1.3;}
+.item-name .sub{display:block;font-size:10px;color:var(--muted);}
+.item-input{background:#F0F2F5;border:1px solid #DADCE0;color:var(--text);padding:6px 8px;font-family:'Outfit',sans-serif;font-size:11px;width:100%;outline:none;text-align:right;transition:border-color .2s;-moz-appearance:textfield;}
+.item-input::-webkit-outer-spin-button,.item-input::-webkit-inner-spin-button{-webkit-appearance:none;}
+.item-input:focus{border-color:var(--gold);}
+.item-unit{font-size:10px;color:var(--muted);text-align:center;}
+.item-total{font-size:11px;font-weight:500;text-align:right;color:var(--text);}
+.item-total.has-value{color:var(--gold);}
+.item-benchmark{font-size:9px;color:var(--muted);text-align:center;}
+.item-alert{font-size:13px;text-align:center;}
+.subcategory-hdr{grid-column:1/-1;padding:10px 12px 4px;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid var(--dim);margin-top:6px;}
+
+/* EDUCATIONAL BOX */
+.edu-box{margin:0 24px 16px;background:#FFF8F0;border:1px solid rgba(155,122,69,0.25);padding:14px 16px;}
+.edu-box .edu-title{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.edu-box .edu-text{font-size:12px;color:var(--muted);line-height:1.7;}
+.edu-box .edu-rule{margin-top:8px;padding:8px 10px;background:#F8F9FA;font-size:11px;color:var(--gold);font-weight:500;}
+
+/* ALERTS */
+.alert-row{grid-column:1/-1;padding:6px 12px;margin:4px 0;font-size:11px;display:flex;align-items:center;gap:8px;}
+.alert-warn{background:rgba(212,129,58,.06);border-left:2px solid var(--orange);color:var(--orange);}
+.alert-error{background:rgba(224,85,85,.06);border-left:2px solid var(--red);color:var(--red);}
+.alert-ok{background:rgba(76,175,125,.06);border-left:2px solid var(--green);color:var(--green);}
+
+/* TOTALS / SUMMARY PANEL */
+.summary-panel{background:#FFFFFF;border-left:1px solid #E0E0E0;overflow-y:auto;height:calc(100vh - 100px);position:sticky;top:54px;}
+.sum-hdr{padding:14px 16px;background:#F8F9FA;border-bottom:1px solid #E0E0E0;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--dim);}
+.kpi{background:#F8F9FA;padding:12px 14px;}
+.kpi-label{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.kpi-val{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;line-height:1;}
+.kpi-val.gold{color:var(--gold);}
+.kpi-val.green{color:var(--green);}
+.kpi-val.red{color:var(--red);}
+.kpi-val.blue{color:var(--blue);}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+
+/* CHAPTER BREAKDOWN */
+.chap-breakdown{padding:14px 16px;background:#FFFFFF;}
+.breakdown-title{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.breakdown-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.b-dot{width:8px;height:8px;border-radius:1px;flex-shrink:0;}
+.b-label{font-size:10px;color:var(--muted);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.b-val{font-size:11px;font-weight:500;color:var(--text);white-space:nowrap;}
+.b-pct{font-size:9px;color:var(--muted);min-width:30px;text-align:right;}
+.b-bar-wrap{width:100%;height:3px;background:#D3D6DA;margin-top:3px;}
+.b-bar{height:100%;transition:width .4s;}
+
+/* CHART */
+.chart-wrap{padding:14px 16px;border-top:1px solid #E0E0E0;}
+.chart-canvas-wrap{position:relative;height:180px;}
+
+/* COMPLETENESS */
+.completeness{padding:14px 16px;border-top:1px solid #E0E0E0;}
+.comp-title{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.comp-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.comp-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.comp-label{font-size:10px;color:var(--muted);flex:1;}
+.comp-status{font-size:10px;font-weight:500;}
+
+/* WARNINGS PANEL */
+.warnings{padding:14px 16px;border-top:1px solid #E0E0E0;}
+.warn-title{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.warn-item{font-size:10px;padding:6px 8px;margin-bottom:4px;display:flex;gap:6px;align-items:flex-start;}
+.warn-item.warn{background:rgba(212,129,58,.08);color:var(--orange);}
+.warn-item.error{background:rgba(224,85,85,.08);color:var(--red);}
+.warn-item.ok{background:rgba(76,175,125,.08);color:var(--green);}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:#F0F2F5;}
+::-webkit-scrollbar-thumb{background:#BDC1C6;}
+
+/* PRINT */
+@media print{.sidebar,.summary-panel,.nav{display:none;}.layout{grid-template-columns:1fr;}.content{height:auto;overflow:visible;}.chap-section{display:block!important;page-break-inside:avoid;}}
+
+/* TOOLTIP */
+[data-tip]{position:relative;cursor:help;}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:#E8EAED;color:var(--text);font-size:10px;padding:6px 10px;white-space:nowrap;z-index:999;pointer-events:none;border:1px solid #DADCE0;font-weight:300;max-width:240px;white-space:normal;}
+
+@media(max-width:1100px){.layout{grid-template-columns:200px 1fr;}.summary-panel{display:none;}}
+@media(max-width:750px){.layout{grid-template-columns:1fr;}.sidebar{position:static;height:auto;}.content{height:auto;}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <div class="nav-logo">RED <span>ACADEMY</span></div>
+    <div class="nav-badge">Simulador de Presupuesto</div>
+  </div>
+  <div class="nav-r">
+    <button class="btn btn-out" onclick="resetAll()">↺ Reiniciar</button>
+    <button class="btn btn-out" onclick="loadPreset()">📋 Cargar Ejemplo</button>
+    <button class="btn btn-gold" onclick="window.print()">Exportar PDF</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-text">
+    <h1>Simulador <em>Maestro</em> de Presupuesto de Construcción</h1>
+    <p>Ingresa los costos de cada capítulo de la obra. El simulador calcula el presupuesto total, el costo por m², detecta capítulos incompletos y te enseña qué incluye cada rubro.</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+    <span class="quality-label">Cargar benchmark:</span>
+    <div class="quality-btns">
+      <button class="qbtn" onclick="setQuality('economico',this)" id="q-economico">Económico</button>
+      <button class="qbtn active" onclick="setQuality('estandar',this)" id="q-estandar">Estándar</button>
+      <button class="qbtn" onclick="setQuality('premium',this)" id="q-premium">Premium</button>
+      <button class="qbtn" onclick="setQuality('lujo',this)" id="q-lujo">Lujo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="layout">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-hdr">Capítulos de obra</div>
+  <div id="chap-nav"></div>
+</div>
+
+<!-- CONTENT -->
+<div class="content" id="main-content">
+  <div class="content-inner">
+
+    <!-- PROJECT DATA -->
+    <div class="proj-section" id="sect-proyecto">
+      <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;">DATOS DEL PROYECTO</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Esta información aparecerá en el encabezado del presupuesto exportado.</div>
+      <div class="proj-grid">
+        <div class="pfield"><label>Nombre del proyecto</label><input type="text" id="p-nombre" placeholder="Villa Paradise — Ocean Hills" oninput="updateHeader()"></div>
+        <div class="pfield"><label>Ubicación</label><input type="text" id="p-ubicacion" placeholder="Bocas del Toro, Panamá" oninput="updateHeader()"></div>
+        <div class="pfield"><label>Tipo de proyecto</label>
+          <select id="p-tipo" onchange="calc()">
+            <option>Villa / Casa de lujo</option>
+            <option>Apartamentos</option>
+            <option>Casa residencial</option>
+            <option>Local comercial</option>
+            <option>Hotel / Posada</option>
+            <option>Edificio mixto</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="pfield"><label>Área total a construir (m²)</label><input type="number" id="p-area" value="634" min="1" oninput="calc()"></div>
+        <div class="pfield"><label>Número de niveles</label><input type="number" id="p-niveles" value="2" min="1" oninput="calc()"></div>
+        <div class="pfield"><label>Fecha del presupuesto</label><input type="date" id="p-fecha" oninput="calc()"></div>
+        <div class="pfield"><label>Elaborado por</label><input type="text" id="p-autor" placeholder="Tu nombre" oninput="calc()"></div>
+        <div class="pfield"><label>Moneda</label><select id="p-moneda"><option value="USD">USD (Dólares)</option><option value="PAB">PAB (Balboas)</option></select></div>
+        <div class="pfield"><label>Contingencia (%)</label><input type="number" id="p-contingencia" value="10" min="0" max="30" oninput="calc()"></div>
+      </div>
+    </div>
+
+    <!-- CHAPTERS will be generated dynamically -->
+    <div id="chapters-container"></div>
+
+  </div>
+</div>
+
+<!-- SUMMARY PANEL -->
+<div class="summary-panel">
+  <div class="sum-hdr">Resumen en tiempo real</div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi" style="grid-column:1/-1;background:#FFFFFF;">
+      <div class="kpi-label">Total estimado de la obra</div>
+      <div class="kpi-val gold" id="kpi-total" style="font-size:30px;">$0</div>
+      <div class="kpi-sub" id="kpi-total-sub">Sin incluir contingencia</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Con contingencia</div>
+      <div class="kpi-val green" id="kpi-con-cont">$0</div>
+      <div class="kpi-sub" id="kpi-cont-pct">+10% contingencia</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Costo por m²</div>
+      <div class="kpi-val gold" id="kpi-m2">$0/m²</div>
+      <div class="kpi-sub" id="kpi-m2-ref">Referencia: —</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Capítulos completados</div>
+      <div class="kpi-val blue" id="kpi-caps">0/13</div>
+      <div class="kpi-sub">Con al menos 1 ítem</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Ítems ingresados</div>
+      <div class="kpi-val gold" id="kpi-items">0</div>
+      <div class="kpi-sub">de 120+ disponibles</div>
+    </div>
+  </div>
+
+  <!-- CHAPTER BREAKDOWN -->
+  <div class="chap-breakdown">
+    <div class="breakdown-title">Desglose por capítulo</div>
+    <div id="breakdown-list"></div>
+  </div>
+
+  <!-- DONUT CHART -->
+  <div class="chart-wrap">
+    <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Distribución de costos</div>
+    <div class="chart-canvas-wrap"><canvas id="chart-breakdown"></canvas></div>
+  </div>
+
+  <!-- COMPLETENESS -->
+  <div class="completeness">
+    <div class="comp-title">Estado por capítulo</div>
+    <div id="completeness-list"></div>
+  </div>
+
+  <!-- WARNINGS -->
+  <div class="warnings">
+    <div class="warn-title">Alertas del simulador</div>
+    <div id="warnings-list"></div>
+  </div>
+
+</div><!-- /summary -->
+</div><!-- /layout -->
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// DATA: CHAPTERS & ITEMS
+// ══════════════════════════════════════════════════════════════
+const CHAPTERS = [
+{id:'c00',num:'00',name:'Obras Preliminares',icon:'🔧',color:'#5F6368',
+ desc:'Trabajos previos al inicio de la construcción propiamente. Son temporales pero obligatorios.',
+ edu:'Las obras preliminares representan el 1-3% del costo total. Un error común es ignorarlas en el presupuesto inicial. Sin campamento, bodega y acceso provisional, la obra no puede comenzar.',
+ rule:'Regla: presupuesta el 2% del costo total de construcción como estimado inicial.',
+ items:[
+  {id:'c00i01',name:'Limpieza y descapote del terreno',sub:'Chapeo, remoción de vegetación',unit:'m²',bench:{e:2,s:3.5,p:5,l:7}},
+  {id:'c00i02',name:'Cerramiento provisional de obra',sub:'Malla o zinc, polines de madera',unit:'ml',bench:{e:8,s:14,p:20,l:30}},
+  {id:'c00i03',name:'Letrero de obra',sub:'Diseño e instalación',unit:'glb',bench:{e:200,s:450,p:800,l:1500}},
+  {id:'c00i04',name:'Oficina provisional de obra',sub:'Container o estructura temporal',unit:'glb',bench:{e:800,s:1800,p:3500,l:6000}},
+  {id:'c00i05',name:'Bodega de materiales',sub:'Estructura temporal cubierta',unit:'glb',bench:{e:400,s:900,p:1800,l:3500}},
+  {id:'c00i06',name:'Servicios sanitarios provisionales',sub:'Baños portátiles o rancho',unit:'glb',bench:{e:300,s:600,p:1200,l:2000}},
+  {id:'c00i07',name:'Instalación eléctrica provisional',sub:'Acometida y tablero temporal',unit:'glb',bench:{e:400,s:800,p:1500,l:2500}},
+  {id:'c00i08',name:'Agua provisional de obra',sub:'Conexión temporal y tanque',unit:'glb',bench:{e:300,s:600,p:1200,l:2000}},
+  {id:'c00i09',name:'Acceso provisional vehicular',sub:'Lastre, nivelación de acceso',unit:'glb',bench:{e:500,s:1200,p:2500,l:5000}},
+  {id:'c00i10',name:'Vigilancia y seguridad de obra',sub:'Caseta + personal (mes)',unit:'mes',bench:{e:400,s:700,p:1200,l:2000}},
+ ]},
+
+{id:'c01',num:'01',name:'Movimiento de Tierras',icon:'🚜',color:'#D4813A',
+ desc:'Excavaciones, rellenos y compactaciones necesarias para preparar el terreno para la cimentación.',
+ edu:'El movimiento de tierras puede ser uno de los rubros más variables del presupuesto. Un estudio geotécnico ANTES de presupuestar puede ahorrarte sorpresas costosas. La topografía accidentada puede multiplicar este costo por 3-5x.',
+ rule:'Regla: en terrenos con pendiente moderada, presupuesta 20-30% más que en terreno plano.',
+ items:[
+  {id:'c01i01',name:'Excavación manual',sub:'Zanjas, zapatas pequeñas',unit:'m³',bench:{e:18,s:28,p:40,l:55}},
+  {id:'c01i02',name:'Excavación mecánica',sub:'Retroexcavadora, zonas amplias',unit:'m³',bench:{e:8,s:14,p:20,l:30}},
+  {id:'c01i03',name:'Relleno y compactación',sub:'Material selecto o préstamo',unit:'m³',bench:{e:22,s:38,p:55,l:80}},
+  {id:'c01i04',name:'Botada de material sobrante',sub:'Acarreo y disposición fuera del sitio',unit:'m³',bench:{e:12,s:20,p:30,l:45}},
+  {id:'c01i05',name:'Corte en roca',sub:'Si el estudio de suelos lo indica',unit:'m³',bench:{e:45,s:80,p:120,l:180}},
+  {id:'c01i06',name:'Nivelación y conformación',sub:'Preparación plataforma de construcción',unit:'m²',bench:{e:5,s:9,p:14,l:20}},
+  {id:'c01i07',name:'Drenaje de escorrentías',sub:'Canales y pendientes de drenaje',unit:'ml',bench:{e:15,s:28,p:45,l:70}},
+  {id:'c01i08',name:'Muro de contención',sub:'Concreto o bloque, para taludes',unit:'m²',bench:{e:80,s:140,p:220,l:350}},
+ ]},
+
+{id:'c02',num:'02',name:'Cimentaciones',icon:'🏗',color:'#C9A96E',
+ desc:'La base que soporta toda la estructura del edificio. El tipo depende del estudio de suelos.',
+ edu:'La cimentación es uno de los capítulos más críticos. Una cimentación subdimensionada o mal calculada puede costar 10 veces más de reparar que de hacer bien desde el inicio. Siempre basada en estudio geotécnico.',
+ rule:'Regla: la cimentación representa el 8-15% del costo de construcción en proyectos residenciales estándar.',
+ items:[
+  {id:'c02i01',name:'Vigas de amarre / cadenas de fundación',sub:'Concreto reforzado, incluye encofrado y acero',unit:'m³',bench:{e:280,s:420,p:580,l:780}},
+  {id:'c02i02',name:'Zapatas aisladas',sub:'Para columnas, tamaño según cálculo estructural',unit:'m³',bench:{e:260,s:380,p:520,l:700}},
+  {id:'c02i03',name:'Zapatas corridas',sub:'Bajo muros de carga continuos',unit:'m³',bench:{e:250,s:360,p:490,l:660}},
+  {id:'c02i04',name:'Losa de fundación',sub:'Losa flotante o losa de piso en tierra',unit:'m³',bench:{e:260,s:380,p:520,l:700}},
+  {id:'c02i05',name:'Pilotes o micropilotes',sub:'Solo si el estudio lo exige',unit:'ml',bench:{e:120,s:200,p:320,l:500}},
+  {id:'c02i06',name:'Placa de entrepiso nivel 0',sub:'Concreto reforzado sobre suelo',unit:'m²',bench:{e:28,s:44,p:65,l:90}},
+  {id:'c02i07',name:'Impermeabilización de fundaciones',sub:'Pintura epóxica o membrana',unit:'m²',bench:{e:8,s:15,p:25,l:40}},
+  {id:'c02i08',name:'Acero de refuerzo',sub:'Si no está incluido en los ítems anteriores',unit:'kg',bench:{e:0.8,s:1.2,p:1.6,l:2.2}},
+ ]},
+
+{id:'c03',num:'03',name:'Estructura',icon:'🏢',color:'#4ABDE0',
+ desc:'El esqueleto resistente del edificio: columnas, vigas, losas y muros estructurales.',
+ edu:'La estructura es el capítulo de mayor impacto en la seguridad del edificio. No se puede economizar aquí. El acero de refuerzo y el concreto deben cumplir con las especificaciones del plano estructural firmado.',
+ rule:'Regla: la estructura representa el 20-30% del costo total de construcción en proyectos de 2+ niveles.',
+ items:[
+  {id:'c03i01',name:'Columnas de concreto reforzado',sub:'Incluye encofrado, acero y fundida',unit:'m³',bench:{e:320,s:480,p:640,l:860}},
+  {id:'c03i02',name:'Vigas principales',sub:'Vigas de entrepiso y cubierta',unit:'m³',bench:{e:300,s:450,p:600,l:800}},
+  {id:'c03i03',name:'Vigas secundarias / viguetas',sub:'Apoyo de losas, escaleras',unit:'m³',bench:{e:280,s:420,p:560,l:750}},
+  {id:'c03i04',name:'Losa de entrepiso',sub:'Concreto reforzado, espesor según cálculo',unit:'m²',bench:{e:55,s:85,p:120,l:165}},
+  {id:'c03i05',name:'Losa de cubierta',sub:'Cubierta de concreto plana o inclinada',unit:'m²',bench:{e:50,s:78,p:110,l:155}},
+  {id:'c03i06',name:'Muros pantalla / de corte',sub:'Para resistencia sísmica y contención',unit:'m²',bench:{e:85,s:130,p:185,l:260}},
+  {id:'c03i07',name:'Escalera de concreto',sub:'Por tramo, con acabado de superficie',unit:'glb',bench:{e:1800,s:3200,p:5500,l:9000}},
+  {id:'c03i08',name:'Estructura metálica (si aplica)',sub:'Perfiles de acero, soldadura, anticorrosivo',unit:'kg',bench:{e:2.8,s:4.2,p:5.8,l:8.0}},
+  {id:'c03i09',name:'Cubierta metálica con estructura',sub:'Cercha, correas y lámina',unit:'m²',bench:{e:35,s:58,p:85,l:130}},
+ ]},
+
+{id:'c04',num:'04',name:'Mampostería y Cerramiento',icon:'🧱',color:'#9B7A45',
+ desc:'Paredes y divisiones que conforman los espacios interiores y el cerramiento exterior.',
+ edu:'La mampostería define el layout de los espacios. Un error en este capítulo afecta todo lo que viene después. Las divisiones húmedas (baños, cocina) requieren bloques reforzados e impermeabilizante.',
+ rule:'Regla: la mampostería representa el 8-14% del costo total. Las paredes de bloques livianos son 30-40% más baratas que bloques pesados.',
+ items:[
+  {id:'c04i01',name:'Pared de bloque de concreto 15cm',sub:'Incluye mortero, verticalidad y nivelación',unit:'m²',bench:{e:22,s:34,p:48,l:66}},
+  {id:'c04i02',name:'Pared de bloque liviano 10cm',sub:'Bloques de arcilla o aerocreto',unit:'m²',bench:{e:18,s:28,p:40,l:55}},
+  {id:'c04i03',name:'Divisiones de gypsum/drywall',sub:'Sistema Steel Framing con lana mineral',unit:'m²',bench:{e:20,s:32,p:48,l:70}},
+  {id:'c04i04',name:'Repello interior grueso',sub:'Primera capa de mortero, relleno de juntas',unit:'m²',bench:{e:8,s:13,p:18,l:25}},
+  {id:'c04i05',name:'Repello fino / enlucido interior',sub:'Acabado final para pintura',unit:'m²',bench:{e:7,s:11,p:16,l:22}},
+  {id:'c04i06',name:'Repello exterior',sub:'Resistente a la intemperie, dos capas',unit:'m²',bench:{e:10,s:16,p:23,l:32}},
+  {id:'c04i07',name:'Fachaleta / revestimiento fachada',sub:'Piedra, porcelanato, madera u otros',unit:'m²',bench:{e:28,s:55,p:110,l:200}},
+  {id:'c04i08',name:'Impermeabilización de paredes húmedas',sub:'Baños, cocinas, áreas de servicio',unit:'m²',bench:{e:12,s:20,p:30,l:45}},
+  {id:'c04i09',name:'Dintel de concreto en vanos',sub:'Sobre puertas y ventanas',unit:'ml',bench:{e:18,s:28,p:40,l:58}},
+ ]},
+
+{id:'c05',num:'05',name:'Techos',icon:'🏠',color:'#4CAF7D',
+ desc:'Sistema de cubierta que protege la edificación de lluvia y sol.',
+ edu:'El sistema de techo es crítico en climas tropicales como Panamá. La cubierta debe considerar el viento, lluvia y temperatura. Un mal techo puede generar humedad que destruye los acabados interiores.',
+ rule:'Regla: El techo representa el 5-10% del presupuesto. En zonas con lluvia intensa, invierte en cubierta de calidad — el costo de reparar filtraciones es siempre mayor.',
+ items:[
+  {id:'c05i01',name:'Estructura de madera para techo',sub:'Cuartones tratados, tijeras, cargadores',unit:'m²',bench:{e:18,s:28,p:42,l:65}},
+  {id:'c05i02',name:'Estructura metálica para techo',sub:'Perfiles C o cerchas de acero',unit:'m²',bench:{e:22,s:38,p:58,l:88}},
+  {id:'c05i03',name:'Cubierta de zinc corrugado',sub:'Cal. 26 o 28, incluye traslapes',unit:'m²',bench:{e:14,s:22,p:32,l:48}},
+  {id:'c05i04',name:'Cubierta de teja cerámica',sub:'Teja española o romana, incluye remate',unit:'m²',bench:{e:28,s:48,p:75,l:120}},
+  {id:'c05i05',name:'Cubierta de membrana asfáltica',sub:'Para terrazas planas, dos capas',unit:'m²',bench:{e:20,s:35,p:55,l:85}},
+  {id:'c05i06',name:'Cubierta de panel sándwich',sub:'Para techos industriales o comerciales',unit:'m²',bench:{e:32,s:52,p:80,l:125}},
+  {id:'c05i07',name:'Impermeabilización de terrazas',sub:'Sistema integral con pendientes',unit:'m²',bench:{e:18,s:30,p:48,l:75}},
+  {id:'c05i08',name:'Canaletas y bajantes PVC',sub:'Recolección y conducción de pluviales',unit:'ml',bench:{e:12,s:20,p:32,l:50}},
+  {id:'c05i09',name:'Cielo de gypsum bajo estructura',sub:'Con suspensión metálica tipo T',unit:'m²',bench:{e:18,s:28,p:42,l:65}},
+ ]},
+
+{id:'c06',num:'06',name:'Instalaciones Eléctricas',icon:'⚡',color:'#F0C000',
+ desc:'Sistema completo de electricidad: desde la acometida hasta los tomacorrientes y luminarias.',
+ edu:'Las instalaciones eléctricas mal ejecutadas son la principal causa de incendios en construcciones. Siempre contrata un electricista certificado y verifica que el sistema pase la revisión del ETESA o ENSA antes de energizar.',
+ rule:'Regla: Las instalaciones eléctricas representan el 6-10% del costo total. En proyectos con A/C central, domótica o carga eléctrica alta, puede llegar al 12-15%.',
+ items:[
+  {id:'c06i01',name:'Acometida eléctrica definitiva',sub:'Conexión red pública, medidor y base',unit:'glb',bench:{e:1200,s:2200,p:3800,l:6500}},
+  {id:'c06i02',name:'Tablero principal de distribución',sub:'Panel de 200A, breakers, tierra',unit:'glb',bench:{e:800,s:1500,p:2800,l:5000}},
+  {id:'c06i03',name:'Sub-tableros por área o piso',sub:'Paneles secundarios de 100-150A',unit:'pza',bench:{e:350,s:650,p:1100,l:2000}},
+  {id:'c06i04',name:'Circuitos de iluminación',sub:'Cable #12, tubo conduit, breaker 15A',unit:'cto',bench:{e:180,s:320,p:520,l:850}},
+  {id:'c06i05',name:'Circuitos de tomacorrientes 120V',sub:'Doble polo, cable #12, breaker 20A',unit:'cto',bench:{e:200,s:360,p:580,l:950}},
+  {id:'c06i06',name:'Circuitos de 220V (A/C, cocina)',sub:'Cable calibre mayor, breaker bipolar',unit:'cto',bench:{e:280,s:480,p:780,l:1300}},
+  {id:'c06i07',name:'Tomacorrientes dobles',sub:'Con placa, toma de tierra',unit:'pza',bench:{e:18,s:32,p:55,l:100}},
+  {id:'c06i08',name:'Apagadores y placas',sub:'Simple, doble, triple según diseño',unit:'pza',bench:{e:15,s:28,p:55,l:120}},
+  {id:'c06i09',name:'Sistema de tierra física',sub:'Malla de tierra, varillas copperweld',unit:'glb',bench:{e:450,s:800,p:1400,l:2500}},
+  {id:'c06i10',name:'Sistema de iluminación exterior',sub:'Jardines, fachadas, accesos',unit:'glb',bench:{e:600,s:1400,p:3000,l:6500}},
+  {id:'c06i11',name:'Sistema solar fotovoltaico',sub:'Paneles, inversores, baterías, instalación',unit:'kWp',bench:{e:1200,s:1600,p:2000,l:2600}},
+  {id:'c06i12',name:'Sistema de respaldo / generador',sub:'Planta eléctrica, ATS, cableado',unit:'kVA',bench:{e:450,s:700,p:1000,l:1500}},
+ ]},
+
+{id:'c07',num:'07',name:'Instalaciones Sanitarias',icon:'🔵',color:'#4ABDE0',
+ desc:'Sistemas de agua potable, aguas residuales y pluviales de la edificación.',
+ edu:'Las instalaciones sanitarias mal ejecutadas son una de las principales causas de humedad y daños estructurales. Las tuberías deben ser inspeccionadas antes de empotrarlas. Un plomero certificado es indispensable.',
+ rule:'Regla: Las instalaciones sanitarias representan el 5-8% del presupuesto. La tubería y accesorios de calidad cuestan el 20-30% más pero duran 3-5x más.',
+ items:[
+  {id:'c07i01',name:'Red de agua fría (PVC)',sub:'Tubería, uniones, válvulas, soportes',unit:'pto',bench:{e:55,s:90,p:145,l:220}},
+  {id:'c07i02',name:'Red de agua caliente (CPVC)',sub:'Tubería termorresistente, accesorios',unit:'pto',bench:{e:65,s:105,p:170,l:260}},
+  {id:'c07i03',name:'Red de aguas negras',sub:'Tubería PVC sanitario, bajan, conexiones',unit:'pto',bench:{e:45,s:75,p:120,l:185}},
+  {id:'c07i04',name:'Red de aguas pluviales',sub:'Recolección techos y terrazas',unit:'ml',bench:{e:18,s:30,p:48,l:75}},
+  {id:'c07i05',name:'Tanque de almacenamiento de agua',sub:'Polietileno 500-2000L, base y conexiones',unit:'glb',bench:{e:800,s:1600,p:3000,l:5500}},
+  {id:'c07i06',name:'Cisterna enterrada',sub:'Concreto reforzado, impermeabilizada',unit:'m³',bench:{e:280,s:460,p:700,l:1100}},
+  {id:'c07i07',name:'Bomba de agua y sistema hidroneumático',sub:'Motor, compresor, tablero de control',unit:'glb',bench:{e:600,s:1100,p:2000,l:3800}},
+  {id:'c07i08',name:'Trampa de grasas',sub:'Para cocina, concreto o prefabricada',unit:'glb',bench:{e:350,s:650,p:1100,l:1900}},
+  {id:'c07i09',name:'Pozo séptico y campo de absorción',sub:'Sistema completo según MINSA',unit:'glb',bench:{e:1800,s:3200,p:5500,l:9000}},
+  {id:'c07i10',name:'Conexión a red de alcantarillado',sub:'Caja de registro y acometida pública',unit:'glb',bench:{e:800,s:1400,p:2400,l:4000}},
+ ]},
+
+{id:'c08',num:'08',name:'Instalaciones Especiales',icon:'❄️',color:'#8B5CF6',
+ desc:'A/C, gas, datos, seguridad, domótica y sistemas especializados.',
+ edu:'Las instalaciones especiales representan el 8-15% del costo en proyectos premium y de lujo. Son las que más diferencian un proyecto estándar de uno de alto valor. El A/C es prácticamente obligatorio en climas tropicales.',
+ rule:'Regla: El A/C representa el 5-8% del costo total en proyectos residenciales. En proyectos STR de lujo, la domótica y sistemas especiales pueden representar el 10-12%.',
+ items:[
+  {id:'c08i01',name:'Sistema de A/C split por habitación',sub:'Instalación, refrigerante, soporte, condensadora',unit:'BTU',bench:{e:0.18,s:0.28,p:0.42,l:0.65}},
+  {id:'c08i02',name:'Sistema de A/C central',sub:'Chiller, fancoils, ductos, control',unit:'Ton',bench:{e:1800,s:2800,p:4200,l:6500}},
+  {id:'c08i03',name:'Ventilación mecánica',sub:'Extractores baños, cocina, sala de máquinas',unit:'pza',bench:{e:120,s:220,p:380,l:620}},
+  {id:'c08i04',name:'Red de gas LP o gas natural',sub:'Tubería, reguladores, detector de gas',unit:'glb',bench:{e:800,s:1500,p:2800,l:5000}},
+  {id:'c08i05',name:'Red de datos / cableado estructurado',sub:'Cat6, patch panels, rack de comunicaciones',unit:'pto',bench:{e:55,s:95,p:160,l:280}},
+  {id:'c08i06',name:'Sistema de seguridad y CCTV',sub:'Cámaras IP, DVR, cables, almacenamiento',unit:'glb',bench:{e:800,s:1800,p:3500,l:7000}},
+  {id:'c08i07',name:'Sistema de alarma y sensores',sub:'Panel, sirena, sensores movimiento, humo',unit:'glb',bench:{e:600,s:1200,p:2400,l:4500}},
+  {id:'c08i08',name:'Sistema de domótica',sub:'Control luces, A/C, persianas desde app',unit:'glb',bench:{e:0,s:0,p:4500,l:12000}},
+  {id:'c08i09',name:'Sistema de audio y home theater',sub:'Amplificadores, parlantes empotrados, cableado',unit:'glb',bench:{e:0,s:800,p:3500,l:12000}},
+  {id:'c08i10',name:'Sistema de calentamiento solar de agua',sub:'Colectores, termotanque, conexiones',unit:'glb',bench:{e:900,s:1600,p:2800,l:5000}},
+  {id:'c08i11',name:'Elevador / ascensor',sub:'Eléctrico, 2-4 paradas, instalación completa',unit:'glb',bench:{e:0,s:0,p:18000,l:35000}},
+ ]},
+
+{id:'c09',num:'09',name:'Acabados Interiores',icon:'🎨',color:'#E05555',
+ desc:'Pisos, paredes, cielos, puertas, ventanas y carpintería interior.',
+ edu:'Los acabados interiores son el capítulo que más se "ve" y el que más influye en el precio de venta. En proyectos STR de lujo, los acabados premium pueden aumentar la tarifa por noche en un 30-50%. Es donde más rentable es invertir bien.',
+ rule:'Regla: Los acabados representan el 20-30% del costo total. En proyectos de lujo pueden llegar al 35-40%. El material correcto en la zona correcta maximiza el ROI.',
+ items:[
+  {id:'c09i01',name:'Piso de porcelanato 60×60 o 80×80',sub:'Incluye mortero, nivelación, fragua y remate',unit:'m²',bench:{e:18,s:35,p:65,l:140}},
+  {id:'c09i02',name:'Piso de madera sólida o engineered',sub:'Instalación flotante o pegada',unit:'m²',bench:{e:0,s:45,p:90,l:180}},
+  {id:'c09i03',name:'Piso de concreto pulido o microcemento',sub:'Esmerilado, sellado y abrillantado',unit:'m²',bench:{e:22,s:40,p:70,l:120}},
+  {id:'c09i04',name:'Piso de cerámica (baños/cocina)',sub:'Incluye impermeabilización previa',unit:'m²',bench:{e:16,s:28,p:52,l:110}},
+  {id:'c09i05',name:'Pintura interior muros y cielos',sub:'2 manos látex, incluye masillado',unit:'m²',bench:{e:4,s:7,p:12,l:22}},
+  {id:'c09i06',name:'Azulejo en baños y cocina',sub:'Hasta 2.40m, fragua cerámica',unit:'m²',bench:{e:18,s:32,p:60,l:130}},
+  {id:'c09i07',name:'Cielo de gypsum liso (interiores)',sub:'Con cinta y masillado, listo para pintar',unit:'m²',bench:{e:18,s:28,p:42,l:70}},
+  {id:'c09i08',name:'Cielo de madera / machimbre',sub:'Madera fina, barnizado',unit:'m²',bench:{e:0,s:35,p:70,l:150}},
+  {id:'c09i09',name:'Puertas interiores prefabricadas',sub:'Tambor o sólida, incluye marco y herrajes',unit:'pza',bench:{e:180,s:320,p:600,l:1200}},
+  {id:'c09i10',name:'Puertas exteriores de seguridad',sub:'Madera sólida o metal, cerradura de seguridad',unit:'pza',bench:{e:350,s:650,p:1400,l:3200}},
+  {id:'c09i11',name:'Ventanas de aluminio y vidrio',sub:'Serie media, vidrio float 6mm',unit:'m²',bench:{e:75,s:130,p:220,l:420}},
+  {id:'c09i12',name:'Ventanas de PVC o aluminio premium',sub:'Doble vidrio, perfilería de alta gama',unit:'m²',bench:{e:0,s:160,p:280,l:550}},
+  {id:'c09i13',name:'Closets / armarios',sub:'Melamina o madera, puertas corredizas',unit:'m²',bench:{e:120,s:220,p:420,l:850}},
+  {id:'c09i14',name:'Muebles de cocina (altos y bajos)',sub:'Melamina / madera sólida, encimera',unit:'ml',bench:{e:200,s:420,p:850,l:1800}},
+  {id:'c09i15',name:'Encimera de cocina',sub:'Granito, cuarzo o mármol',unit:'ml',bench:{e:80,s:160,p:320,l:650}},
+  {id:'c09i16',name:'Fregadero de cocina',sub:'Acero inoxidable o composite',unit:'pza',bench:{e:80,s:180,p:380,l:800}},
+  {id:'c09i17',name:'Baños completos (sanitario, lavabo, ducha)',sub:'Equipamiento completo por baño',unit:'glb',bench:{e:800,s:1600,p:3500,l:8000}},
+  {id:'c09i18',name:'Grifería y accesorios de baño',sub:'Mezcladores, toalleros, jaboneras',unit:'glb',bench:{e:200,s:450,p:1000,l:2500}},
+ ]},
+
+{id:'c10',num:'10',name:'Acabados Exteriores',icon:'🌿',color:'#4CAF7D',
+ desc:'Fachada, pisos exteriores, jardines, piscina, muros y accesos.',
+ edu:'Los acabados exteriores son la "primera impresión" del proyecto. En propiedades STR, una fachada y jardín espectaculares aumentan la tarifa por noche y la ocupación. El mantenimiento de áreas exteriores es un costo operativo que el comprador debe considerar.',
+ rule:'Regla: Los acabados exteriores representan el 8-15% del costo total. Una piscina bien construida puede aumentar el valor de una villa en un 15-25%.',
+ items:[
+  {id:'c10i01',name:'Pintura exterior (fachada)',sub:'Pintura acrílica o epoxi, 2 manos, andamios',unit:'m²',bench:{e:6,s:11,p:18,l:32}},
+  {id:'c10i02',name:'Piso de terraza / balcón',sub:'Porcelanato exterior antideslizante',unit:'m²',bench:{e:22,s:40,p:72,l:150}},
+  {id:'c10i03',name:'Piso de concreto estampado exterior',sub:'Accesos, caminos, áreas de tránsito',unit:'m²',bench:{e:28,s:48,p:80,l:140}},
+  {id:'c10i04',name:'Deck de madera exterior (terraza)',sub:'Madera tratada o composite',unit:'m²',bench:{e:45,s:80,p:150,l:280}},
+  {id:'c10i05',name:'Piscina (obra civil)',sub:'Concreto gunita o prefabricada, con revestimiento',unit:'m²',bench:{e:0,s:450,p:750,l:1400}},
+  {id:'c10i06',name:'Equipamiento de piscina',sub:'Bomba, filtro, dosificador, iluminación',unit:'glb',bench:{e:0,s:2800,p:5500,l:12000}},
+  {id:'c10i07',name:'Jacuzzi / spa exterior',sub:'Prefabricado o construido, equipo',unit:'glb',bench:{e:0,s:0,p:5000,l:18000}},
+  {id:'c10i08',name:'Jardines y paisajismo',sub:'Diseño, siembra, sistema de riego',unit:'m²',bench:{e:8,s:18,p:42,l:100}},
+  {id:'c10i09',name:'Sistema de riego automático',sub:'Aspersores, goteo, programador',unit:'m²',bench:{e:5,s:9,p:15,l:28}},
+  {id:'c10i10',name:'Muro perimetral de cerramiento',sub:'Bloque + repello + remate superior',unit:'ml',bench:{e:80,s:140,p:220,l:380}},
+  {id:'c10i11',name:'Portón de acceso vehicular',sub:'Metal, automático con motor',unit:'pza',bench:{e:800,s:1800,p:4000,l:9000}},
+  {id:'c10i12',name:'Cochera o carport',sub:'Losa o estructura, piso, iluminación',unit:'m²',bench:{e:80,s:150,p:280,l:550}},
+  {id:'c10i13',name:'BBQ / área de parrilla exterior',sub:'Construcción en mampostería o acero',unit:'glb',bench:{e:0,s:800,p:2500,l:7000}},
+ ]},
+
+{id:'c11',num:'11',name:'Equipamiento y Amueblado',icon:'🛋️',color:'#D4813A',
+ desc:'Electrodomésticos, muebles y equipamiento de la propiedad.',
+ edu:'En proyectos STR de lujo, el amueblado puede representar el 8-15% del presupuesto total pero tiene el mayor impacto en la tarifa por noche. Un proyecto amueblado premium puede cobrar 40-60% más por noche que uno básico.',
+ rule:'Regla: Para un proyecto STR de lujo con precio de $1M+, invierte mínimo $80,000-$120,000 en amueblado premium. El ROI en tarifas lo recupera en 12-18 meses.',
+ items:[
+  {id:'c11i01',name:'Electrodomésticos de cocina',sub:'Nevera, estufa, horno, lavavajillas, microondas',unit:'glb',bench:{e:1800,s:4000,p:9000,l:22000}},
+  {id:'c11i02',name:'Lavadora y secadora',sub:'Carga frontal o superior',unit:'glb',bench:{e:600,s:1200,p:2500,l:5500}},
+  {id:'c11i03',name:'Muebles de sala',sub:'Sofás, mesa de centro, mueble TV',unit:'glb',bench:{e:800,s:2200,p:5500,l:14000}},
+  {id:'c11i04',name:'Muebles de comedor',sub:'Mesa + sillas, buffet',unit:'glb',bench:{e:600,s:1600,p:4000,l:10000}},
+  {id:'c11i05',name:'Camas y muebles de dormitorio',sub:'Camas, colchones, veladores, cómodas',unit:'glb',bench:{e:500,s:1400,p:3800,l:10000}},
+  {id:'c11i06',name:'Iluminación decorativa',sub:'Lámparas de techo, pie, mesas',unit:'glb',bench:{e:400,s:1200,p:3500,l:9000}},
+  {id:'c11i07',name:'Cortinas y persianas',sub:'Blackout, enrollables, madera',unit:'glb',bench:{e:300,s:800,p:2200,l:6000}},
+  {id:'c11i08',name:'Decoración y arte',sub:'Cuadros, esculturas, plantas decorativas',unit:'glb',bench:{e:200,s:800,p:2500,l:8000}},
+  {id:'c11i09',name:'TV, sonido y equipos audiovisuales',sub:'Smart TVs, sistema de sonido, Apple TV',unit:'glb',bench:{e:500,s:1400,p:4000,l:12000}},
+  {id:'c11i10',name:'Lencería y accesorios (STR)',sub:'Sábanas, toallas, almohadas hoteleras',unit:'glb',bench:{e:0,s:600,p:1800,l:5000}},
+ ]},
+
+{id:'c12',num:'12',name:'Profesionales y Diseño',icon:'📐',color:'#C9A96E',
+ desc:'Honorarios de arquitecto, ingenieros, gerente de proyecto y supervisión de obra.',
+ edu:'Los honorarios profesionales representan el 5-10% del costo de construcción pero son la inversión con mayor retorno. Un buen arquitecto puede ahorrarte más del doble de sus honorarios en eficiencia de diseño. Una buena gerencia de proyecto previene el 80% de los problemas en obra.',
+ rule:'Regla: Arquitectura (3-5%) + Ingeniería estructural (1-2%) + Sanitaria y eléctrica (1-1.5%) + Supervisión (1.5-2.5%) = Total 6.5-11% del costo de construcción.',
+ items:[
+  {id:'c12i01',name:'Honorarios de arquitecto',sub:'Diseño arquitectónico, planos de construcción',unit:'%',bench:{e:3,s:3.5,p:4,l:5}},
+  {id:'c12i02',name:'Ingeniería estructural',sub:'Cálculo, planos y memorias de cálculo',unit:'%',bench:{e:1,s:1.5,p:2,l:2.5}},
+  {id:'c12i03',name:'Ingeniería eléctrica y sanitaria',sub:'Diseño de instalaciones, planos de taller',unit:'%',bench:{e:0.8,s:1.2,p:1.6,l:2}},
+  {id:'c12i04',name:'Gerencia de proyecto',sub:'Coordinación técnica, cronograma, presupuesto',unit:'%',bench:{e:0,s:2,p:3,l:4}},
+  {id:'c12i05',name:'Supervisión e inspección de obra',sub:'Residente de obras o inspección periódica',unit:'%',bench:{e:1.5,s:2,p:2.5,l:3}},
+  {id:'c12i06',name:'Diseño de interiores',sub:'Concepto, layout, especificaciones de materiales',unit:'%',bench:{e:0,s:1,p:2,l:3.5}},
+  {id:'c12i07',name:'Diseño paisajístico',sub:'Plano y especificaciones de jardines y exteriores',unit:'%',bench:{e:0,s:0.5,p:1,l:2}},
+  {id:'c12i08',name:'Estudio de suelos geotécnico',sub:'Sondeos, ensayos de laboratorio, informe',unit:'glb',bench:{e:1500,s:2500,p:4000,l:7000}},
+  {id:'c12i09',name:'Levantamiento topográfico',sub:'Curvas de nivel, linderos, referencias',unit:'glb',bench:{e:800,s:1500,p:2500,l:4500}},
+ ]},
+
+{id:'c13',num:'13',name:'Permisos e Indirectos',icon:'📋',color:'#5F6368',
+ desc:'Permisos municipales, conexiones definitivas de servicios y gastos administrativos.',
+ edu:'Los permisos e indirectos son frecuentemente olvidados en el presupuesto inicial. En Panamá, los trámites de construcción pueden tomar 2-6 meses. Planifica el tiempo y el costo de obtención desde el inicio.',
+ rule:'Regla: Los permisos e indirectos representan el 3-6% del presupuesto. Son costos fijos independientemente del tamaño del proyecto.',
+ items:[
+  {id:'c13i01',name:'Permiso de construcción municipal',sub:'Tasas, derechos municipales, notificaciones',unit:'glb',bench:{e:1200,s:2500,p:4500,l:8000}},
+  {id:'c13i02',name:'Conexión definitiva IDAAN (agua)',sub:'Derechos de conexión, instalación medidor',unit:'glb',bench:{e:1500,s:2500,p:4000,l:7000}},
+  {id:'c13i03',name:'Conexión definitiva ENSA / ENEL (luz)',sub:'Derechos de conexión, instalación medidor',unit:'glb',bench:{e:1200,s:2000,p:3500,l:6000}},
+  {id:'c13i04',name:'Visados de planos MOP / MIVIOT',sub:'Ingeniería, arquitectura, instalaciones',unit:'glb',bench:{e:600,s:1200,p:2200,l:4000}},
+  {id:'c13i05',name:'Permiso ambiental (si aplica)',sub:'Categoría I, II o III según MIAMBIENTE',unit:'glb',bench:{e:0,s:1500,p:4000,l:9000}},
+  {id:'c13i06',name:'Seguro de construcción (CAR)',sub:'Cobertura todo riesgo durante la obra',unit:'glb',bench:{e:800,s:1600,p:3000,l:6000}},
+  {id:'c13i07',name:'Seguro de responsabilidad civil',sub:'Daños a terceros durante la construcción',unit:'glb',bench:{e:400,s:800,p:1500,l:3000}},
+  {id:'c13i08',name:'Certificado de habitabilidad / uso',sub:'Inspección final y certificación de obra',unit:'glb',bench:{e:400,s:800,p:1500,l:3000}},
+  {id:'c13i09',name:'Gastos de fiscalización CAPAC',sub:'Afiliación y supervisión gremial',unit:'glb',bench:{e:300,s:600,p:1200,l:2500}},
+  {id:'c13i10',name:'Gastos administrativos y notariales',sub:'Contratos, escrituras, poderes',unit:'glb',bench:{e:500,s:1000,p:2000,l:4500}},
+  {id:'c13i11',name:'Flete y logística de materiales',sub:'Transporte especial a zonas remotas',unit:'glb',bench:{e:600,s:1500,p:3500,l:8000}},
+  {id:'c13i12',name:'Pruebas y ensayos de calidad',sub:'Concreto, suelos, impermeabilidad',unit:'glb',bench:{e:400,s:800,p:1500,l:3000}},
+ ]},
+];
+
+// CHAPTER COLORS for chart
+const CHAP_COLORS = ['#5F6368','#D4813A','#C9A96E','#4ABDE0','#9B7A45','#4CAF7D','#F0C000','#4ABDE0','#8B5CF6','#E05555','#4CAF7D','#D4813A','#C9A96E','#5F6368'];
+
+// Quality multipliers vs. Estándar (base = 1.0)
+const Q_MULT = {economico:0.60, estandar:1.0, premium:1.55, lujo:2.60};
+let currentQuality = 'estandar';
+let chartBreakdown = null;
+
+// ══════════════════════════════════════════════════════════════
+// BUILD UI
+// ══════════════════════════════════════════════════════════════
+function buildUI(){
+  buildSidebar();
+  buildChapters();
+  buildSummaryLists();
+}
+
+function buildSidebar(){
+  const nav = document.getElementById('chap-nav');
+  CHAPTERS.forEach((chap,i)=>{
+    const div = document.createElement('div');
+    div.className = 'chap-item'+(i===0?' active':'');
+    div.id = 'nav-'+chap.id;
+    div.onclick = ()=>showChap(chap.id);
+    div.innerHTML = `
+      <div class="chap-num" style="background:${chap.color}20;color:${chap.color}">${chap.num}</div>
+      <div class="chap-name">${chap.name}</div>
+      <div class="chap-pct" id="nav-pct-${chap.id}" style="color:${chap.color}">—</div>
+      <div class="chap-bar" id="nav-bar-${chap.id}" style="width:0%;background:${chap.color}"></div>`;
+    nav.appendChild(div);
+  });
+}
+
+function buildChapters(){
+  const container = document.getElementById('chapters-container');
+  CHAPTERS.forEach((chap,ci)=>{
+    const sec = document.createElement('div');
+    sec.className = 'chap-section'+(ci===0?' active':'');
+    sec.id = 'chap-'+chap.id;
+    let html = `
+    <div class="chap-hdr">
+      <div class="chap-hdr-icon">${chap.icon}</div>
+      <div class="chap-hdr-info">
+        <h2>Capítulo ${chap.num} — <em>${chap.name}</em></h2>
+        <p>${chap.desc}</p>
+      </div>
+      <div class="chap-hdr-total">
+        <div class="label">Total capítulo</div>
+        <div class="val" id="chap-total-${chap.id}">$0</div>
+      </div>
+    </div>
+    <div class="edu-box">
+      <div class="edu-title">💡 Concepto educativo</div>
+      <div class="edu-text">${chap.edu}</div>
+      <div class="edu-rule">${chap.rule}</div>
+    </div>
+    <div class="items-table">
+      <div class="items-hdr">
+        <div>Ítem / Descripción</div>
+        <div style="text-align:right">Cantidad</div>
+        <div style="text-align:center">Unidad</div>
+        <div style="text-align:right">Costo unit.</div>
+        <div style="text-align:right">Total</div>
+        <div style="text-align:center">Ref. Panamá</div>
+      </div>`;
+    
+    chap.items.forEach(item=>{
+      const refRange = `$${item.bench.e}–$${item.bench.l}`;
+      html += `
+      <div class="item-row" id="row-${item.id}">
+        <div class="item-name">${item.name}<span class="sub">${item.sub}</span></div>
+        <input type="number" class="item-input" id="qty-${item.id}" placeholder="0" min="0" step="any"
+          oninput="calcItem('${item.id}','${chap.id}')" data-tip="Ingresa la cantidad de ${item.unit}">
+        <div class="item-unit">${item.unit}</div>
+        <input type="number" class="item-input" id="cost-${item.id}" placeholder="${item.bench.s}" min="0" step="any"
+          oninput="calcItem('${item.id}','${chap.id}')" data-tip="Referencia Panamá estándar: $${item.bench.s}/${item.unit}">
+        <div class="item-total" id="total-${item.id}">—</div>
+        <div class="item-benchmark" data-tip="Rango de mercado Panamá 2025">
+          <span style="font-size:9px;color:var(--muted)">$${item.bench.s}</span>
+        </div>
+      </div>`;
+    });
+    
+    html += `
+      <div style="padding:10px 12px;display:flex;justify-content:flex-end;gap:12px;border-top:1px solid var(--dim);margin-top:8px;">
+        <button class="btn btn-out" style="font-size:10px;padding:5px 12px;" onclick="clearChap('${chap.id}')">Limpiar capítulo</button>
+        <button class="btn btn-out" style="font-size:10px;padding:5px 12px;" onclick="fillBenchmark('${chap.id}')">Llenar con benchmark ${currentQuality}</button>
+      </div>
+    </div>`;
+    
+    sec.innerHTML = html;
+    container.appendChild(sec);
+  });
+}
+
+function buildSummaryLists(){
+  // Breakdown list
+  const bl = document.getElementById('breakdown-list');
+  CHAPTERS.forEach(chap=>{
+    bl.innerHTML += `
+    <div class="breakdown-row">
+      <div class="b-dot" style="background:${chap.color}"></div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;">
+          <span class="b-label">${chap.num} ${chap.name}</span>
+          <span class="b-pct" id="b-pct-${chap.id}">0%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">
+          <div class="b-bar-wrap" style="flex:1;margin-right:8px;"><div class="b-bar" id="b-bar-${chap.id}" style="width:0%;background:${chap.color}"></div></div>
+          <span class="b-val" id="b-val-${chap.id}">$0</span>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  // Completeness list
+  const cl = document.getElementById('completeness-list');
+  CHAPTERS.forEach(chap=>{
+    cl.innerHTML += `
+    <div class="comp-row">
+      <div class="comp-dot" id="comp-dot-${chap.id}" style="background:#D3D6DA"></div>
+      <span class="comp-label">${chap.num} ${chap.name}</span>
+      <span class="comp-status" id="comp-status-${chap.id}" style="color:var(--muted)">Vacío</span>
+    </div>`;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════
+function showChap(chapId){
+  document.querySelectorAll('.chap-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.chap-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('chap-'+chapId).classList.add('active');
+  document.getElementById('nav-'+chapId).classList.add('active');
+  document.getElementById('main-content').scrollTop=0;
+}
+
+// ══════════════════════════════════════════════════════════════
+// CALCULATIONS
+// ══════════════════════════════════════════════════════════════
+function g(id){ return parseFloat(document.getElementById(id)?.value)||0; }
+const fmt = n=>n>0?'$'+Math.round(n).toLocaleString('en-US'):'—';
+const fmtFull = n=>'$'+Math.round(n).toLocaleString('en-US');
+
+function calcItem(itemId, chapId){
+  const qty = g(`qty-${itemId}`);
+  const cost = g(`cost-${itemId}`);
+  const total = qty * cost;
+  const el = document.getElementById(`total-${itemId}`);
+  el.textContent = total>0 ? '$'+Math.round(total).toLocaleString('en-US') : '—';
+  el.className = 'item-total'+(total>0?' has-value':'');
+  calcChap(chapId);
+}
+
+function getItemTotal(itemId){
+  const qty = g(`qty-${itemId}`);
+  const cost = g(`cost-${itemId}`);
+  return qty*cost;
+}
+
+function calcChap(chapId){
+  const chap = CHAPTERS.find(c=>c.id===chapId);
+  if(!chap) return;
+  
+  // For c12 (professionals), handle % based items
+  let total = 0;
+  const constTotal = getConstructionSubtotal();
+  
+  chap.items.forEach(item=>{
+    let qty = g(`qty-${item.id}`);
+    let cost = g(`cost-${item.id}`);
+    // If unit is % for professional fees, calculate against construction subtotal
+    if(item.unit==='%' && cost>0 && qty===0){
+      // auto-calculate: cost is the % value
+      total += constTotal * (cost/100);
+      const el = document.getElementById(`total-${item.id}`);
+      if(cost>0){
+        el.textContent = '$'+Math.round(constTotal*(cost/100)).toLocaleString('en-US');
+        el.className='item-total has-value';
+      }
+    } else {
+      total += qty*cost;
+    }
+  });
+  
+  document.getElementById(`chap-total-${chapId}`).textContent = fmtFull(total);
+  calc();
+}
+
+function getConstructionSubtotal(){
+  let total=0;
+  // Sum caps 00-11
+  CHAPTERS.slice(0,12).forEach(chap=>{
+    chap.items.forEach(item=>{
+      total += g(`qty-${item.id}`) * g(`cost-${item.id}`);
+    });
+  });
+  return total;
+}
+
+function getChapTotal(chapId){
+  const chap = CHAPTERS.find(c=>c.id===chapId);
+  if(!chap) return 0;
+  const constTotal = getConstructionSubtotal();
+  let total=0;
+  chap.items.forEach(item=>{
+    const qty=g(`qty-${item.id}`), cost=g(`cost-${item.id}`);
+    if(item.unit==='%' && cost>0 && qty===0){
+      total += constTotal*(cost/100);
+    } else {
+      total += qty*cost;
+    }
+  });
+  return total;
+}
+
+function calc(){
+  const area = g('p-area')||1;
+  const contPct = g('p-contingencia')/100;
+  
+  let grandTotal=0;
+  const chapTotals=[];
+  
+  CHAPTERS.forEach(chap=>{
+    const t=getChapTotal(chap.id);
+    chapTotals.push(t);
+    grandTotal+=t;
+    document.getElementById(`chap-total-${chap.id}`).textContent = fmtFull(t);
+  });
+  
+  const contingencia = grandTotal * contPct;
+  const totalConCont = grandTotal + contingencia;
+  const m2 = area>0 ? grandTotal/area : 0;
+  
+  // KPIs
+  document.getElementById('kpi-total').textContent = fmtFull(grandTotal);
+  document.getElementById('kpi-con-cont').textContent = fmtFull(totalConCont);
+  document.getElementById('kpi-cont-pct').textContent = `+${g('p-contingencia')}% contingencia`;
+  document.getElementById('kpi-m2').textContent = '$'+Math.round(m2).toLocaleString()+'/m²';
+  document.getElementById('kpi-total-sub').textContent = `Sin incluir ${g('p-contingencia')}% contingencia`;
+  
+  // M2 reference
+  const refs = {economico:'$350-500/m²',estandar:'$500-800/m²',premium:'$800-1200/m²',lujo:'$1200-2000/m²'};
+  document.getElementById('kpi-m2-ref').textContent = 'Ref. '+currentQuality+': '+refs[currentQuality];
+  
+  // Completed chapters
+  let completedChaps=0, filledItems=0;
+  CHAPTERS.forEach(chap=>{
+    let hasItem=false;
+    chap.items.forEach(item=>{
+      if(g(`qty-${item.id}`)>0||g(`cost-${item.id}`)>0){ hasItem=true; filledItems++; }
+    });
+    if(hasItem) completedChaps++;
+  });
+  document.getElementById('kpi-caps').textContent = `${completedChaps}/13`;
+  document.getElementById('kpi-items').textContent = filledItems;
+  
+  // Breakdown
+  CHAPTERS.forEach((chap,i)=>{
+    const t=chapTotals[i];
+    const pct = grandTotal>0 ? (t/grandTotal*100) : 0;
+    document.getElementById(`b-val-${chap.id}`).textContent = t>0?fmtFull(t):'$0';
+    document.getElementById(`b-pct-${chap.id}`).textContent = pct.toFixed(1)+'%';
+    document.getElementById(`b-bar-${chap.id}`).style.width = pct+'%';
+    document.getElementById(`nav-pct-${chap.id}`).textContent = t>0?fmtFull(t):'—';
+    document.getElementById(`nav-bar-${chap.id}`).style.width = Math.min(pct*2,100)+'%';
+    
+    // Completeness
+    const filled = chap.items.filter(item=>g(`qty-${item.id}`)>0||g(`cost-${item.id}`)>0).length;
+    const pctFilled = chap.items.length>0?filled/chap.items.length*100:0;
+    const dot = document.getElementById(`comp-dot-${chap.id}`);
+    const status = document.getElementById(`comp-status-${chap.id}`);
+    if(filled===0){dot.style.background='var(--faint)';status.textContent='Vacío';status.style.color='var(--muted)';}
+    else if(pctFilled<50){dot.style.background='var(--orange)';status.textContent='Parcial';status.style.color='var(--orange)';}
+    else if(pctFilled<90){dot.style.background='var(--gold)';status.textContent='Incompleto';status.style.color='var(--gold)';}
+    else{dot.style.background='var(--green)';status.textContent='Completo';status.style.color='var(--green)';}
+  });
+  
+  // Chart
+  updateChart(chapTotals.filter((t,i)=>t>0), CHAPTERS.filter((c,i)=>chapTotals[i]>0).map(c=>c.name), CHAPTERS.filter((c,i)=>chapTotals[i]>0).map(c=>c.color));
+  
+  // Warnings
+  generateWarnings(grandTotal, m2, chapTotals, area);
+}
+
+function generateWarnings(total, m2, chapTotals, area){
+  const w=[];
+  const refs={economico:[350,500],estandar:[500,800],premium:[800,1200],lujo:[1200,2000]};
+  const [low,high]=refs[currentQuality];
+  
+  if(total===0){ w.push({type:'warn',msg:'Aún no has ingresado ningún costo. Empieza por el Capítulo 00 o usa "Cargar Ejemplo".'}); }
+  else{
+    if(m2<low*0.7) w.push({type:'warn',msg:`Costo de $${Math.round(m2)}/m² está MUY por debajo del benchmark ${currentQuality} ($${low}-$${high}/m²). Verifica que no falten capítulos.`});
+    else if(m2>high*1.4) w.push({type:'warn',msg:`Costo de $${Math.round(m2)}/m² supera el benchmark ${currentQuality} ($${low}-$${high}/m²). Revisa si hay ítems duplicados.`});
+    else w.push({type:'ok',msg:`Costo de $${Math.round(m2)}/m² está dentro del rango ${currentQuality} ($${low}-$${high}/m²).`});
+  }
+  
+  // Check structure vs total
+  const struct = chapTotals[3]; // c03
+  if(total>0 && struct>0){
+    const pct = struct/total*100;
+    if(pct<12) w.push({type:'warn',msg:`Estructura (${pct.toFixed(1)}% del total) parece baja. Lo normal es 18-28% para 2+ niveles.`});
+    else if(pct>35) w.push({type:'error',msg:`Estructura (${pct.toFixed(1)}%) parece muy alta. Verifica los valores ingresados.`});
+  }
+  
+  // Check electrical
+  const elect = chapTotals[6]; // c06
+  if(total>0 && total>50000 && elect===0) w.push({type:'error',msg:'No has presupuestado instalaciones eléctricas. Este capítulo es obligatorio.'});
+  
+  // Check sanitaria
+  const sanit = chapTotals[7]; // c07
+  if(total>0 && total>50000 && sanit===0) w.push({type:'error',msg:'No has presupuestado instalaciones sanitarias. Este capítulo es obligatorio.'});
+  
+  // Check contingencia
+  const contPct = g('p-contingencia');
+  if(contPct<8) w.push({type:'warn',msg:`Contingencia del ${contPct}% es muy baja. Se recomienda mínimo 8-12% para proyectos residenciales.`});
+  
+  // Missing professionals
+  if(chapTotals[12]===0&&total>30000) w.push({type:'warn',msg:'No has presupuestado honorarios de arquitecto e ingenieros. Representan el 6-11% del total.'});
+
+  const wl = document.getElementById('warnings-list');
+  wl.innerHTML = w.length>0 ? w.map(ww=>`<div class="warn-item ${ww.type}"><span>${ww.type==='ok'?'✓':ww.type==='warn'?'⚠':'✗'}</span><span>${ww.msg}</span></div>`).join('') : '<div style="font-size:10px;color:var(--muted);">Sin alertas activas.</div>';
+}
+
+// ══════════════════════════════════════════════════════════════
+// CHART
+// ══════════════════════════════════════════════════════════════
+function updateChart(values, labels, colors){
+  if(chartBreakdown){ chartBreakdown.data.datasets[0].data=values; chartBreakdown.data.labels=labels; chartBreakdown.data.datasets[0].backgroundColor=colors; chartBreakdown.update(); return; }
+  chartBreakdown=new Chart(document.getElementById('chart-breakdown'),{
+    type:'doughnut',
+    data:{labels,datasets:[{data:values,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:d=>' $'+Math.round(d.raw).toLocaleString()+' ('+d.label+')'}}}}
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// QUALITY PRESETS
+// ══════════════════════════════════════════════════════════════
+function setQuality(q, el){
+  currentQuality=q;
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  // Update benchmark displays
+  CHAPTERS.forEach(chap=>{
+    chap.items.forEach(item=>{
+      const bel = document.querySelector(`#row-${item.id} .item-benchmark span`);
+      if(bel) bel.textContent = '$'+item.bench[q.substring(0,1)==='e'&&q.length>1?'s':q[0]];
+      const inputCost = document.getElementById(`cost-${item.id}`);
+      if(inputCost) inputCost.placeholder = item.bench[q.substring(0,2)==='es'?'s':q.substring(0,2)==='ec'?'e':q.substring(0,2)==='pr'?'p':'l'];
+    });
+  });
+}
+
+function getBenchVal(item, q){
+  const k={economico:'e',estandar:'s',premium:'p',lujo:'l'}[q]||'s';
+  return item.bench[k];
+}
+
+function fillBenchmark(chapId){
+  const chap = CHAPTERS.find(c=>c.id===chapId);
+  if(!chap) return;
+  const area = g('p-area')||634;
+  const perM2Chaps = ['c02','c03','c04','c05','c06','c07','c08','c09','c10'];
+  chap.items.forEach(item=>{
+    const bVal = getBenchVal(item, currentQuality);
+    if(bVal===0) return; // Don't fill items not applicable for this quality
+    const costEl = document.getElementById(`cost-${item.id}`);
+    const qtyEl = document.getElementById(`qty-${item.id}`);
+    if(costEl) costEl.value = bVal;
+    // Smart quantity defaults
+    if(!qtyEl.value || parseFloat(qtyEl.value)===0){
+      let qty=0;
+      switch(item.unit){
+        case 'm²': qty=area; break;
+        case 'glb': qty=1; break;
+        case 'm³': qty=Math.round(area*0.05); break;
+        case 'ml': qty=Math.round(area*0.8); break;
+        case 'pto': qty=Math.round(area/8); break;
+        case 'pza': qty=Math.round(area/30); break;
+        case 'cto': qty=Math.round(area/60); break;
+        case 'mes': qty=10; break;
+        case 'kWp': qty=30; break;
+        case 'kVA': qty=20; break;
+        case 'Ton': qty=Math.round(area/40); break;
+        case 'BTU': qty=Math.round(area*80); break;
+        case 'kg': qty=Math.round(area*8); break;
+        case '%': qty=0; break; // handled separately
+        default: qty=area/10;
+      }
+      if(item.unit==='%') qtyEl.value=''; // % items use cost as the percentage
+      else if(qty>0) qtyEl.value=Math.round(qty);
+    }
+    calcItem(item.id, chapId);
+  });
+  showToast(`Benchmark "${currentQuality}" cargado para ${chap.name}`);
+}
+
+function loadPreset(){
+  // Load all chapters with standard benchmark
+  CHAPTERS.forEach(chap=>fillBenchmark(chap.id));
+  showToast('Ejemplo completo cargado con benchmark estándar');
+}
+
+function clearChap(chapId){
+  const chap=CHAPTERS.find(c=>c.id===chapId);
+  chap.items.forEach(item=>{
+    const q=document.getElementById(`qty-${item.id}`), c=document.getElementById(`cost-${item.id}`);
+    if(q) q.value=''; if(c) c.value='';
+    const t=document.getElementById(`total-${item.id}`);
+    t.textContent='—'; t.className='item-total';
+  });
+  calc();
+}
+
+function resetAll(){
+  CHAPTERS.forEach(chap=>clearChap(chap.id));
+  showToast('Simulador reiniciado');
+}
+
+function updateHeader(){ calc(); }
+
+// TOAST
+function showToast(msg){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:16px;right:16px;background:#F0F2F5;border:1px solid var(--b);padding:10px 16px;font-size:12px;z-index:999;color:var(--gold);display:flex;gap:8px;align-items:center;transition:all .3s;transform:translateY(60px);opacity:0;';document.body.appendChild(t);}
+  t.innerHTML='<span>✓</span><span>'+msg+'</span>';
+  t.style.transform='translateY(0)';t.style.opacity='1';
+  setTimeout(()=>{t.style.transform='translateY(60px)';t.style.opacity='0';},2800);
+}
+
+// Set default date
+document.getElementById('p-fecha').value = new Date().toISOString().split('T')[0];
+
+// INIT
+buildUI();
+calc();
+</script>
+</body>
+</html>
