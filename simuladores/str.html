@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Simulador STR — Modelo Financiero Airbnb · RED ACADEMY</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#9B7A45;--gold-l:#C8A857;--gold-p:rgba(155,122,69,0.10);
+  --bg:#FFFFFF;--bg2:#F8F9FA;--bg3:#F0F2F5;--bg4:#E8EAED;
+  --text:#111B21;--muted:#5F6368;--dim:#E0E0E0;
+  --green:#1E8E3E;--green-p:rgba(30,142,62,0.08);
+  --red:#D93025;--red-p:rgba(217,48,37,0.08);
+  --blue:#1A73E8;--blue-p:rgba(26,115,232,0.08);
+  --orange:#E37400;--orange-p:rgba(227,116,0,0.08);
+  --purple:#8430CE;--purple-p:rgba(132,48,206,0.08);
+  --teal:#00897B;
+}
+body{background:var(--bg2);color:var(--text);font-family:'Outfit',sans-serif;font-weight:300;}
+::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:#F0F2F5;}::-webkit-scrollbar-thumb{background:#BDC1C6;border-radius:3px;}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;}
+input[type=number]{-moz-appearance:textfield;}
+
+/* NAV */
+.nav{height:52px;background:#FFFFFF;border-bottom:1px solid var(--dim);box-shadow:0 1px 4px rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 22px;position:sticky;top:0;z-index:300;}
+.logo{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;letter-spacing:.12em;color:var(--gold);}
+.logo span{color:var(--text);font-weight:300;}
+.badge{font-size:9px;letter-spacing:.16em;text-transform:uppercase;background:var(--gold-p);color:var(--gold);padding:3px 10px;border:1px solid rgba(155,122,69,.25);}
+
+/* TABS */
+.main-tabs{display:flex;background:#FFFFFF;border-bottom:2px solid var(--dim);padding:0 22px;gap:2px;}
+.mtab{padding:14px 20px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;display:flex;align-items:center;gap:7px;}
+.mtab:hover{color:var(--text);}
+.mtab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:500;}
+
+/* CONTENT */
+.tab-pane{display:none;padding:20px;max-width:1400px;margin:0 auto;}
+.tab-pane.active{display:block;}
+
+/* CARDS */
+.card{background:#FFFFFF;border:1px solid var(--dim);border-radius:8px;padding:18px 22px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+.card-hdr{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+/* FIELDS */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:11px;font-weight:500;color:var(--muted);}
+.field input,.field select{background:#FFFFFF;border:1px solid #DADCE0;color:var(--text);padding:8px 11px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;transition:border-color .2s;border-radius:4px;}
+.field input:focus,.field select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(26,115,232,.1);}
+.field select option{background:#fff;}
+
+/* KPIs */
+.kpi-row{display:grid;gap:10px;margin-bottom:16px;}
+.kpi-row-5{grid-template-columns:repeat(5,1fr);}
+.kpi-row-4{grid-template-columns:repeat(4,1fr);}
+.kpi-row-3{grid-template-columns:repeat(3,1fr);}
+.kpi{background:#FFFFFF;border:1px solid var(--dim);border-radius:8px;padding:13px 16px;}
+.kpi.blue-k{border-color:rgba(26,115,232,.35);background:var(--blue-p);}
+.kpi.green-k{border-color:rgba(30,142,62,.35);background:var(--green-p);}
+.kpi.red-k{border-color:rgba(217,48,37,.35);background:var(--red-p);}
+.kpi.gold-k{border-color:rgba(155,122,69,.35);background:var(--gold-p);}
+.kpi.orange-k{border-color:rgba(227,116,0,.35);background:var(--orange-p);}
+.kpi.purple-k{border-color:rgba(132,48,206,.35);background:var(--purple-p);}
+.kpi-lbl{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.kpi-val{font-family:'Cormorant Garamond',serif;font-size:27px;font-weight:400;line-height:1.1;}
+.kpi-val.blue{color:var(--blue);}
+.kpi-val.green{color:var(--green);}
+.kpi-val.red{color:var(--red);}
+.kpi-val.gold{color:var(--gold);}
+.kpi-val.orange{color:var(--orange);}
+.kpi-val.purple{color:var(--purple);}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* INFO BOXES */
+.info{background:var(--blue-p);border:1px solid rgba(26,115,232,.2);border-radius:6px;padding:11px 15px;margin-bottom:12px;}
+.info.warn{background:var(--orange-p);border-color:rgba(227,116,0,.25);}
+.info.success{background:var(--green-p);border-color:rgba(30,142,62,.25);}
+.info.gold{background:var(--gold-p);border-color:rgba(155,122,69,.25);}
+.info-ttl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);margin-bottom:4px;}
+.info.warn .info-ttl{color:var(--orange);}
+.info.success .info-ttl{color:var(--green);}
+.info.gold .info-ttl{color:var(--gold);}
+.info p{font-size:12px;color:var(--text);line-height:1.7;}
+
+/* TABLES */
+.tbl-wrap{overflow-x:auto;border-radius:6px;border:1px solid var(--dim);}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead tr{background:#F8F9FA;}
+th{padding:9px 13px;text-align:left;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid var(--dim);}
+td{padding:8px 13px;border-bottom:1px solid #F0F2F5;color:var(--text);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#FAFAFA;}
+.tr-hl td{background:#EAF1FB;font-weight:500;}
+.tr-gold td{background:#FFF8F0;font-weight:600;}
+td.pos{color:var(--green);font-weight:500;}
+td.neg{color:var(--red);}
+td.neu{color:var(--gold);font-weight:500;}
+td.rt{text-align:right;}
+td.ct{text-align:center;}
+
+/* SEASON EDITOR */
+.season-row{display:grid;grid-template-columns:140px 100px 100px 80px 80px 40px;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid #F0F2F5;}
+.season-row:last-child{border-bottom:none;}
+.season-name{font-size:12px;font-weight:500;}
+.season-dot{width:10px;height:10px;border-radius:50%;margin-right:4px;display:inline-block;}
+
+/* CHART */
+.chart-card{background:#FFFFFF;border:1px solid var(--dim);border-radius:8px;padding:16px;}
+.chart-ttl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.ch-wrap{position:relative;}
+
+/* PAYBACK VISUAL */
+.payback-bar{height:28px;background:#E8EAED;border-radius:14px;overflow:hidden;margin:10px 0;}
+.payback-fill{height:100%;border-radius:14px;display:flex;align-items:center;padding-left:12px;font-size:11px;font-weight:600;color:#fff;transition:width .6s;}
+
+/* MARKET SELECTOR TABS */
+.mkt-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.mkt-tab{padding:5px 12px;font-size:11px;border:1px solid var(--dim);border-radius:16px;cursor:pointer;background:#FFFFFF;color:var(--muted);transition:all .15s;font-family:'Outfit',sans-serif;}
+.mkt-tab:hover{border-color:var(--blue);color:var(--blue);}
+.mkt-tab.active{background:var(--blue);color:#FFFFFF;border-color:var(--blue);}
+
+/* FORMULA BOX */
+.formula{background:#F8F9FA;border:1px solid var(--dim);border-radius:6px;padding:10px 14px;margin:8px 0;font-family:'Courier New',monospace;font-size:12px;color:var(--text);}
+.formula strong{color:var(--blue);}
+
+/* OCCUPANCY VISUAL */
+.occ-visual{display:flex;gap:2px;flex-wrap:wrap;margin:8px 0;}
+.occ-night{width:14px;height:14px;border-radius:2px;}
+
+/* AIRDNA BADGE */
+.airdna-badge{display:inline-flex;align-items:center;gap:5px;background:#FF385C;color:#FFF;font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;letter-spacing:.06em;}
+
+/* PRINT */
+@media print{.nav,.main-tabs{display:none;}.tab-pane.active{padding:0;}}
+@media(max-width:900px){.kpi-row-5,.kpi-row-4{grid-template-columns:repeat(2,1fr);}.grid-3,.grid-4{grid-template-columns:1fr 1fr;}.season-row{grid-template-columns:1fr 1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="logo">RED <span>ACADEMY</span></div>
+    <div class="badge">Simulador STR — Modelo Financiero</div>
+  </div>
+  <button onclick="window.print()" style="padding:7px 14px;font-size:11px;background:var(--blue);color:#FFF;border:none;border-radius:4px;cursor:pointer;font-family:'Outfit',sans-serif;">Exportar PDF</button>
+</nav>
+
+<!-- TABS -->
+<div class="main-tabs">
+  <div class="mtab active" onclick="goTab('airbnb',this)"><span>🏡</span> Tarifa por Noche (Airbnb)</div>
+  <div class="mtab" onclick="goTab('mensual',this)"><span>📅</span> Proyección Mensual / Anual</div>
+  <div class="mtab" onclick="goTab('roi',this)"><span>📊</span> ROI y Recuperación de Inversión</div>
+  <div class="mtab" onclick="goTab('mercados',this)"><span>🌎</span> Benchmarks AirDNA por Mercado</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     TAB 1: TARIFA POR NOCHE
+═══════════════════════════════════════════════════ -->
+<div class="tab-pane active" id="tab-airbnb">
+
+  <div class="info gold">
+    <div class="info-ttl">📘 ¿Qué es y para qué sirve esta sección?</div>
+    <p>Aquí defines la tarifa por noche de tu propiedad basada en datos reales del mercado. AirDNA es la plataforma líder de analytics para Airbnb — rastrea millones de listings y calcula el ADR (tarifa diaria promedio), la ocupación real y el RevPAR de cada mercado. <strong>Usa estos benchmarks para fijar tu tarifa con datos, no con intuición.</strong></p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 380px;gap:16px;">
+  <div>
+    <!-- PROPERTY DATA -->
+    <div class="card">
+      <div class="card-hdr"><span>🏠</span> Datos de la propiedad</div>
+      <div class="grid-3" style="margin-bottom:12px;">
+        <div class="field"><label>Nombre del listing</label><input type="text" id="s-nombre" value="Villa Paradise — Bocas del Toro" oninput="calcAll()"></div>
+        <div class="field"><label>Precio de compra / inversión total</label><input type="number" id="s-inversion" value="1109040" step="1000" oninput="calcAll()"></div>
+        <div class="field"><label>Tipo de propiedad</label>
+          <select id="s-tipo" onchange="calcAll()">
+            <option>Villa de lujo (5+ hab.)</option>
+            <option>Casa completa (3-4 hab.)</option>
+            <option>Apartamento completo</option>
+            <option>Cabaña / Bungalow</option>
+            <option>Hotel boutique (por hab.)</option>
+          </select>
+        </div>
+        <div class="field"><label>Número de habitaciones</label>
+          <select id="s-hab" onchange="calcAll()">
+            <option>1</option><option>2</option><option>3</option><option>4</option><option value="5" selected>5+</option>
+          </select>
+        </div>
+        <div class="field"><label>Capacidad máxima (personas)</label><input type="number" id="s-cap" value="10" oninput="calcAll()"></div>
+        <div class="field"><label>Mercado / Destino</label>
+          <select id="s-mercado" onchange="loadMarket()">
+            <option value="bocas">Bocas del Toro, Panamá</option>
+            <option value="boquete">Boquete, Chiriquí</option>
+            <option value="casco">Casco Viejo, Ciudad de Panamá</option>
+            <option value="venao">Playa Venao, Pedasí</option>
+            <option value="tulum">Tulum, México</option>
+            <option value="cartagena">Cartagena, Colombia</option>
+            <option value="manuel">Manuel Antonio, Costa Rica</option>
+            <option value="punta">Punta Cana, Rep. Dominicana</option>
+            <option value="sanjuan">San Juan, Puerto Rico</option>
+            <option value="medellin">Medellín, Colombia</option>
+            <option value="custom">Mercado personalizado</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEASON RATES -->
+    <div class="card">
+      <div class="card-hdr"><span>📅</span> Tarifas por temporada
+        <span style="margin-left:auto;font-size:10px;color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0;">Personaliza cada temporada según el mercado</span>
+      </div>
+      <div style="display:grid;grid-template-columns:160px 105px 100px 75px 80px 40px;gap:6px;padding:6px 10px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:#F8F9FA;border-radius:4px;margin-bottom:6px;">
+        <span>Temporada</span><span>Tarifa/noche</span><span>Ocupación %</span><span>Meses</span><span>Noches/año</span><span></span>
+      </div>
+      <div id="seasons-container"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button onclick="addSeason()" style="padding:6px 14px;font-size:11px;background:transparent;border:1px solid var(--dim);color:var(--muted);border-radius:4px;cursor:pointer;font-family:'Outfit',sans-serif;">+ Agregar temporada</button>
+        <button onclick="loadSeasonPreset()" style="padding:6px 14px;font-size:11px;background:transparent;border:1px solid rgba(26,115,232,.3);color:var(--blue);border-radius:4px;cursor:pointer;font-family:'Outfit',sans-serif;">Cargar preset del mercado</button>
+      </div>
+    </div>
+
+    <!-- ADR BENCHMARK -->
+    <div class="card">
+      <div class="card-hdr"><span style="background:#FF385C;color:#FFF;padding:2px 6px;border-radius:3px;font-size:10px;">AirDNA</span> Benchmark del mercado seleccionado</div>
+      <div class="grid-4" id="airdna-kpis"></div>
+      <div id="airdna-insight" class="info" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: LIVE RESULTS -->
+  <div>
+    <div class="kpi blue-k" style="margin-bottom:10px;">
+      <div class="kpi-lbl">RevPAR proyectado</div>
+      <div class="kpi-val blue" id="k-revpar">$0</div>
+      <div class="kpi-sub">Revenue per available night (ADR × Ocupación)</div>
+    </div>
+    <div class="kpi-row kpi-row-2" style="margin-bottom:10px;">
+      <div class="kpi green-k">
+        <div class="kpi-lbl">Ingreso bruto / mes</div>
+        <div class="kpi-val green" id="k-ingbr-mes">$0</div>
+        <div class="kpi-sub">Promedio anual</div>
+      </div>
+      <div class="kpi gold-k">
+        <div class="kpi-lbl">Ingreso bruto / año</div>
+        <div class="kpi-val gold" id="k-ingbr-ano">$0</div>
+        <div class="kpi-sub">Todas las temporadas</div>
+      </div>
+    </div>
+    <div class="kpi-row kpi-row-2" style="margin-bottom:10px;">
+      <div class="kpi">
+        <div class="kpi-lbl">ADR promedio ponderado</div>
+        <div class="kpi-val blue" id="k-adr-prom">$0</div>
+        <div class="kpi-sub">/noche</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Ocupación ponderada</div>
+        <div class="kpi-val" id="k-occ-prom">0%</div>
+        <div class="kpi-sub">Promedio anual</div>
+      </div>
+    </div>
+    <div class="kpi-row kpi-row-2" style="margin-bottom:10px;">
+      <div class="kpi">
+        <div class="kpi-lbl">Noches vendidas/año</div>
+        <div class="kpi-val gold" id="k-noches">0</div>
+        <div class="kpi-sub">de 365 disponibles</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Fee Airbnb (3%)</div>
+        <div class="kpi-val red" id="k-fee-airbnb">$0</div>
+        <div class="kpi-sub">Comisión plataforma</div>
+      </div>
+    </div>
+    <!-- OCCUPANCY VISUAL -->
+    <div class="card">
+      <div class="card-hdr"><span>📆</span> Visualización de ocupación anual</div>
+      <div class="occ-visual" id="occ-visual"></div>
+      <div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:var(--muted);">
+        <span>🟢 Alta temporada</span>
+        <span>🟡 Media temporada</span>
+        <span>🔴 Baja temporada</span>
+        <span>⬜ Vacante</span>
+      </div>
+    </div>
+    <!-- CHART monthly -->
+    <div class="chart-card">
+      <div class="chart-ttl">Ingresos estimados por mes</div>
+      <div class="ch-wrap" style="height:180px;"><canvas id="ch-monthly"></canvas></div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     TAB 2: PROYECCIÓN MENSUAL / ANUAL
+═══════════════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-mensual">
+  <div style="display:grid;grid-template-columns:1fr 400px;gap:16px;">
+  <div>
+    <!-- GASTOS OPERATIVOS -->
+    <div class="card">
+      <div class="card-hdr"><span>💸</span> Gastos operativos mensuales
+        <span style="margin-left:auto;font-size:10px;color:var(--muted);font-weight:300;text-transform:none;letter-spacing:0;">Ingresa los costos reales de tu propiedad</span>
+      </div>
+      <div class="grid-3">
+        <div class="field"><label>Property management (%)</label><input type="number" id="g-mgmt" value="25" step="1" oninput="calcAll()"></div>
+        <div class="field"><label>Limpieza por estadía ($)</label><input type="number" id="g-clean" value="120" step="10" oninput="calcAll()"></div>
+        <div class="field"><label>Estadías promedio / mes</label><input type="number" id="g-stays" value="6" step="1" oninput="calcAll()"></div>
+        <div class="field"><label>Electricidad / mes ($)</label><input type="number" id="g-elec" value="380" step="10" oninput="calcAll()"></div>
+        <div class="field"><label>Agua / mes ($)</label><input type="number" id="g-agua" value="80" step="10" oninput="calcAll()"></div>
+        <div class="field"><label>Internet + Cable ($)</label><input type="number" id="g-internet" value="120" step="10" oninput="calcAll()"></div>
+        <div class="field"><label>HOA / Cuota mantenimiento ($)</label><input type="number" id="g-hoa" value="350" step="50" oninput="calcAll()"></div>
+        <div class="field"><label>Seguro de la propiedad ($)</label><input type="number" id="g-seguro" value="180" step="20" oninput="calcAll()"></div>
+        <div class="field"><label>Impuesto inmueble / mes ($)</label><input type="number" id="g-impuesto" value="0" step="20" oninput="calcAll()"></div>
+        <div class="field"><label>Mantenimiento y reparaciones ($)</label><input type="number" id="g-mant" value="250" step="50" oninput="calcAll()"></div>
+        <div class="field"><label>Suministros y reposición ($)</label><input type="number" id="g-sumin" value="150" step="25" oninput="calcAll()"></div>
+        <div class="field"><label>Marketing / fotografía ($)</label><input type="number" id="g-mkt" value="80" step="20" oninput="calcAll()"></div>
+      </div>
+      <div class="info warn" style="margin-top:12px;">
+        <div class="info-ttl">⚠ Regla del desarrollador STR</div>
+        <p>Los gastos operativos de una propiedad STR premium representan entre el <strong>35-50% del ingreso bruto</strong>. Si tus gastos están por debajo del 30%, probablemente estás olvidando algo. Incluye siempre un colchón de mantenimiento del 1% del valor de la propiedad al año.</p>
+      </div>
+    </div>
+
+    <!-- PROYECCIÓN MENSUAL TABLE -->
+    <div class="card">
+      <div class="card-hdr"><span>📊</span> Proyección mensual detallada</div>
+      <div class="tbl-wrap">
+        <table id="t-mensual">
+          <thead><tr>
+            <th>Mes</th><th>Temporada</th><th class="rt">Noches</th><th class="rt">Ingreso bruto</th>
+            <th class="rt">Fee Airbnb</th><th class="rt">Gastos op.</th><th class="rt">NOI</th><th class="rt">Margen</th>
+          </tr></thead>
+          <tbody id="tb-mensual"></tbody>
+          <tfoot id="tf-mensual"></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div>
+    <div class="kpi blue-k" style="margin-bottom:10px;">
+      <div class="kpi-lbl">NOI anual (Ingreso Operativo Neto)</div>
+      <div class="kpi-val blue" id="k2-noi-ano">$0</div>
+      <div class="kpi-sub">Ingreso bruto − todos los gastos</div>
+    </div>
+    <div class="kpi-row kpi-row-2" style="margin-bottom:10px;">
+      <div class="kpi green-k">
+        <div class="kpi-lbl">NOI mensual prom.</div>
+        <div class="kpi-val green" id="k2-noi-mes">$0</div>
+        <div class="kpi-sub">Promedio de los 12 meses</div>
+      </div>
+      <div class="kpi gold-k">
+        <div class="kpi-lbl">Margen operativo</div>
+        <div class="kpi-val gold" id="k2-margen">0%</div>
+        <div class="kpi-sub">NOI / Ingreso bruto</div>
+      </div>
+    </div>
+    <div class="kpi-row kpi-row-2" style="margin-bottom:10px;">
+      <div class="kpi red-k">
+        <div class="kpi-lbl">Gastos totales/año</div>
+        <div class="kpi-val red" id="k2-gastos">$0</div>
+        <div class="kpi-sub">Todos los costos operativos</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Gastos / Ingreso</div>
+        <div class="kpi-val" id="k2-ratio-g">0%</div>
+        <div class="kpi-sub">Referencia: 35-50%</div>
+      </div>
+    </div>
+    <!-- DESGLOSE GASTOS -->
+    <div class="card" style="margin-bottom:10px;">
+      <div class="card-hdr"><span>📋</span> Desglose de gastos</div>
+      <div id="gasto-breakdown"></div>
+    </div>
+    <!-- CHART gastos donut -->
+    <div class="chart-card">
+      <div class="chart-ttl">Distribución de gastos operativos</div>
+      <div class="ch-wrap" style="height:200px;"><canvas id="ch-gastos"></canvas></div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     TAB 3: ROI Y RECUPERACIÓN
+═══════════════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-roi">
+  <div style="display:grid;grid-template-columns:1fr 380px;gap:16px;">
+  <div>
+    <!-- EDUCATIVO -->
+    <div class="card">
+      <div class="card-hdr"><span>📘</span> Aprende los indicadores: Cap Rate, ROI, Payback y GRM</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">CAP RATE — Capitalización</div>
+          <div class="formula"><strong>Cap Rate</strong> = NOI Anual / Precio de compra × 100</div>
+          <p style="font-size:11px;color:var(--muted);line-height:1.6;">Mide la rentabilidad del activo independientemente del financiamiento. <strong>Referencia STR tropical: 7-14%</strong>. Por encima del 10% es excelente para propiedades de lujo.</p>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--green);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">CASH-ON-CASH — Retorno sobre equity</div>
+          <div class="formula"><strong>CoC</strong> = NOI - Servicio de deuda / Capital propio × 100</div>
+          <p style="font-size:11px;color:var(--muted);line-height:1.6;">Mide el retorno sobre <em>tu</em> capital invertido después de pagar el crédito. Más relevante que el cap rate si financiaste con banco.</p>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--orange);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">PAYBACK — Recuperación de inversión</div>
+          <div class="formula"><strong>Payback</strong> = Inversión total / NOI anual</div>
+          <p style="font-size:11px;color:var(--muted);line-height:1.6;">Años que tarda el NOI en recuperar la inversión inicial. <strong>Referencia STR lujo: 8-15 años</strong>. Un payback menor a 12 años se considera excelente en mercados turísticos.</p>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--purple);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">GRM — Multiplicador de renta bruta</div>
+          <div class="formula"><strong>GRM</strong> = Precio de compra / Renta bruta anual</div>
+          <p style="font-size:11px;color:var(--muted);line-height:1.6;">Cuántos años de renta bruta equivalen al precio. <strong>Menor GRM = mejor deal.</strong> Referencia STR: GRM de 8-14 es atractivo.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROI PARAMÉTROS -->
+    <div class="card">
+      <div class="card-hdr"><span>⚙️</span> Parámetros del modelo de retorno</div>
+      <div class="grid-4">
+        <div class="field"><label>% Financiado con banco</label><input type="number" id="r-deuda-pct" value="0" min="0" max="80" oninput="calcAll()"></div>
+        <div class="field"><label>Tasa interés hipoteca (%)</label><input type="number" id="r-tasa" value="7.25" step="0.25" oninput="calcAll()"></div>
+        <div class="field"><label>Plazo hipoteca (años)</label><input type="number" id="r-plazo" value="20" oninput="calcAll()"></div>
+        <div class="field"><label>Apreciación anual del activo (%)</label><input type="number" id="r-apreciacion" value="4.5" step="0.5" oninput="calcAll()"></div>
+        <div class="field"><label>Aumento tarifas anual (%)</label><input type="number" id="r-aumento-tarifa" value="3.0" step="0.5" oninput="calcAll()"></div>
+        <div class="field"><label>Aumento gastos anual (%)</label><input type="number" id="r-aumento-gastos" value="3.5" step="0.5" oninput="calcAll()"></div>
+        <div class="field"><label>Horizonte de análisis (años)</label>
+          <select id="r-horizonte" onchange="calcAll()">
+            <option>5</option><option selected>10</option><option>15</option><option>20</option>
+          </select>
+        </div>
+        <div class="field"><label>Tasa de descuento WACC (%)</label><input type="number" id="r-wacc" value="10" step="0.5" oninput="calcAll()"></div>
+      </div>
+    </div>
+
+    <!-- 10-YEAR PROJECTION TABLE -->
+    <div class="card">
+      <div class="card-hdr"><span>📈</span> Proyección de retorno a <span id="horizonte-label">10</span> años</div>
+      <div class="tbl-wrap">
+        <table id="t-proyeccion">
+          <thead><tr>
+            <th>Año</th><th class="rt">Ingreso bruto</th><th class="rt">NOI</th>
+            <th class="rt">Servicio deuda</th><th class="rt">Flujo neto</th>
+            <th class="rt">Valor propiedad</th><th class="rt">Retorno total acum.</th><th class="ct">ROI acum.</th>
+          </tr></thead>
+          <tbody id="tb-proyeccion"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: ROI KPIs -->
+  <div>
+    <div class="kpi blue-k" style="margin-bottom:10px;">
+      <div class="kpi-lbl">Cap Rate (año 1)</div>
+      <div class="kpi-val blue" id="k3-caprate">0%</div>
+      <div class="kpi-sub">NOI / Precio de compra · Ref: 7-14% STR</div>
+    </div>
+    <div class="kpi-row kpi-row-2" style="margin-bottom:10px;">
+      <div class="kpi green-k">
+        <div class="kpi-lbl">Cash-on-Cash Return</div>
+        <div class="kpi-val green" id="k3-coc">0%</div>
+        <div class="kpi-sub">Sobre capital propio</div>
+      </div>
+      <div class="kpi orange-k">
+        <div class="kpi-lbl">GRM</div>
+        <div class="kpi-val orange" id="k3-grm">0</div>
+        <div class="kpi-sub">Multiplicador renta bruta</div>
+      </div>
+    </div>
+    <!-- PAYBACK VISUAL -->
+    <div class="kpi gold-k" style="margin-bottom:10px;">
+      <div class="kpi-lbl">Payback period — Recuperación</div>
+      <div class="kpi-val gold" id="k3-payback">0 años</div>
+      <div style="margin-top:6px;">
+        <div class="payback-bar"><div class="payback-fill" id="payback-fill" style="width:0%;background:var(--green);">0%</div></div>
+        <div style="font-size:10px;color:var(--muted);" id="payback-label">—</div>
+      </div>
+    </div>
+    <div class="kpi-row kpi-row-2" style="margin-bottom:10px;">
+      <div class="kpi">
+        <div class="kpi-lbl">Retorno total <span id="k3-h-label">10</span> años</div>
+        <div class="kpi-val gold" id="k3-ret-total">$0</div>
+        <div class="kpi-sub">NOI + apreciación</div>
+      </div>
+      <div class="kpi green-k">
+        <div class="kpi-lbl">ROI total <span id="k3-h-label2">10</span> años</div>
+        <div class="kpi-val green" id="k3-roi-total">0%</div>
+        <div class="kpi-sub">Vs. inversión inicial</div>
+      </div>
+    </div>
+    <div class="kpi purple-k" style="margin-bottom:10px;">
+      <div class="kpi-lbl">TIR / IRR estimada</div>
+      <div class="kpi-val purple" id="k3-irr">0%</div>
+      <div class="kpi-sub">Tasa interna de retorno anual</div>
+    </div>
+    <div class="kpi" style="margin-bottom:10px;">
+      <div class="kpi-lbl">VPN (WACC <span id="k3-wacc-label">10</span>%)</div>
+      <div class="kpi-val" id="k3-vpn">$0</div>
+      <div class="kpi-sub" id="k3-vpn-sub">—</div>
+    </div>
+    <!-- ROI vs Mercado chart -->
+    <div class="chart-card">
+      <div class="chart-ttl">ROI vs. alternativas de inversión</div>
+      <div class="ch-wrap" style="height:200px;"><canvas id="ch-roi-comp"></canvas></div>
+    </div>
+    <!-- FLUJO ACUM chart -->
+    <div class="chart-card" style="margin-top:10px;">
+      <div class="chart-ttl">Flujo de caja acumulado (proyección)</div>
+      <div class="ch-wrap" style="height:180px;"><canvas id="ch-flujo"></canvas></div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     TAB 4: BENCHMARKS AIRDNA
+═══════════════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-mercados">
+  <div class="info">
+    <div class="info-ttl"><span class="airdna-badge">AirDNA</span> &nbsp;Fuente de datos · Referencia Q1 2025</div>
+    <p>Los datos a continuación son métricas de referencia AirDNA para propiedades completas (entire home) en mercados turísticos de Panamá y América Latina. Los datos de villas de lujo (5+ hab.) suelen tener ADR 3-6x mayor al promedio del mercado. Úsalos como punto de partida — valida siempre con el análisis local actual en airdna.co antes de tomar decisiones de inversión.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span>🇵🇦</span> Mercados de Panamá</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Mercado</th><th class="ct">ADR promedio</th><th class="ct">ADR Villa lujo</th>
+          <th class="ct">Ocupación media</th><th class="ct">RevPAR</th>
+          <th class="ct">Ingreso bruto med./año</th><th class="ct">Market Score</th><th>Tendencia</th>
+        </tr></thead>
+        <tbody>
+          <tr class="tr-hl">
+            <td><strong>🏝 Bocas del Toro — Isla Colón</strong></td>
+            <td class="ct neu">$245</td><td class="ct">$1,100–$1,500</td>
+            <td class="ct">62%</td><td class="ct pos">$152</td>
+            <td class="ct pos">$55,500</td><td class="ct">78/100</td>
+            <td>📈 Creciendo</td>
+          </tr>
+          <tr>
+            <td>🏔 Boquete, Chiriquí</td>
+            <td class="ct neu">$185</td><td class="ct">$600–$900</td>
+            <td class="ct">58%</td><td class="ct">$107</td>
+            <td class="ct">$39,100</td><td class="ct">71/100</td>
+            <td>📈 Creciendo</td>
+          </tr>
+          <tr>
+            <td>🏙 Casco Viejo, Ciudad de Panamá</td>
+            <td class="ct neu">$165</td><td class="ct">$400–$700</td>
+            <td class="ct">68%</td><td class="ct">$112</td>
+            <td class="ct">$40,900</td><td class="ct">74/100</td>
+            <td>➡ Estable</td>
+          </tr>
+          <tr>
+            <td>🏖 Playa Venao, Pedasí</td>
+            <td class="ct neu">$210</td><td class="ct">$700–$1,100</td>
+            <td class="ct">55%</td><td class="ct">$116</td>
+            <td class="ct">$42,200</td><td class="ct">68/100</td>
+            <td>📈 Creciendo</td>
+          </tr>
+          <tr>
+            <td>🌊 Santa Catalina, Veraguas</td>
+            <td class="ct neu">$175</td><td class="ct">$500–$850</td>
+            <td class="ct">52%</td><td class="ct">$91</td>
+            <td class="ct">$33,200</td><td class="ct">63/100</td>
+            <td>📈 Emergente</td>
+          </tr>
+          <tr class="tr-gold">
+            <td><strong>🌟 Ocean Hills (villas lujo) — estimado</strong></td>
+            <td class="ct" style="color:var(--gold)">$1,200</td><td class="ct" style="color:var(--gold)">$1,000–$1,500</td>
+            <td class="ct" style="color:var(--gold)">60%</td>
+            <td class="ct" style="color:var(--gold)">$720</td>
+            <td class="ct" style="color:var(--gold)">$262,800</td>
+            <td class="ct" style="color:var(--gold)">N/D</td>
+            <td>📈 Premium</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span>🌎</span> Mercados comparables de LATAM (referencia AirDNA)</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Mercado</th><th class="ct">ADR promedio</th><th class="ct">ADR Top 10%</th>
+          <th class="ct">Ocupación media</th><th class="ct">RevPAR</th>
+          <th class="ct">Ingreso bruto/año</th><th class="ct">Perfil comprador</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td>🇲🇽 Tulum, México</td>
+            <td class="ct pos">$380</td><td class="ct">$850–$2,500</td>
+            <td class="ct pos">70%</td><td class="ct pos">$266</td>
+            <td class="ct pos">$97,100</td><td>Europeo, Norteamericano</td>
+          </tr>
+          <tr>
+            <td>🇨🇴 Cartagena, Colombia</td>
+            <td class="ct">$220</td><td class="ct">$450–$1,200</td>
+            <td class="ct">63%</td><td class="ct">$139</td>
+            <td class="ct">$50,700</td><td>Colombiano, Norteamericano</td>
+          </tr>
+          <tr>
+            <td>🇨🇷 Manuel Antonio, Costa Rica</td>
+            <td class="ct pos">$290</td><td class="ct">$650–$1,800</td>
+            <td class="ct pos">65%</td><td class="ct pos">$189</td>
+            <td class="ct pos">$68,900</td><td>Norteamericano, Europeo</td>
+          </tr>
+          <tr>
+            <td>🇩🇴 Punta Cana, Rep. Dom.</td>
+            <td class="ct">$280</td><td class="ct">$600–$1,600</td>
+            <td class="ct pos">68%</td><td class="ct">$190</td>
+            <td class="ct">$69,400</td><td>Norteamericano, Europeo</td>
+          </tr>
+          <tr>
+            <td>🇵🇷 San Juan, Puerto Rico</td>
+            <td class="ct pos">$350</td><td class="ct">$750–$2,000</td>
+            <td class="ct pos">72%</td><td class="ct pos">$252</td>
+            <td class="ct pos">$92,000</td><td>Norteamericano (EE.UU.)</td>
+          </tr>
+          <tr>
+            <td>🇨🇴 Medellín, Colombia</td>
+            <td class="ct">$145</td><td class="ct">$300–$700</td>
+            <td class="ct pos">71%</td><td class="ct">$103</td>
+            <td class="ct">$37,600</td><td>Digital nomads, Turistas</td>
+          </tr>
+          <tr>
+            <td>🇧🇷 Florianópolis, Brasil</td>
+            <td class="ct">$195</td><td class="ct">$420–$1,100</td>
+            <td class="ct">61%</td><td class="ct">$119</td>
+            <td class="ct">$43,400</td><td>Brasileño, Argentino</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:10px;font-style:italic;">Datos de referencia AirDNA / Airbnb Q1 2025 para "entire home". ADR Top 10% = propiedades premium del mercado. Valida en airdna.co con datos actualizados antes de invertir.</div>
+  </div>
+
+  <!-- EDUCATIONAL: STR KPIs EXPLAINED -->
+  <div class="card">
+    <div class="card-hdr"><span>📘</span> Glosario AirDNA: los 6 indicadores que debes conocer</div>
+    <div class="grid-3">
+      <div style="padding:12px;background:#F8F9FA;border-radius:6px;border:1px solid var(--dim);">
+        <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:6px;">ADR — Average Daily Rate</div>
+        <div class="formula"><strong>ADR</strong> = Ingresos totales / Noches vendidas</div>
+        <p style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;">La tarifa promedio que se cobró por noche en las noches efectivamente vendidas. No confundir con la tarifa publicada (listada vs. cobrada).</p>
+      </div>
+      <div style="padding:12px;background:#F8F9FA;border-radius:6px;border:1px solid var(--dim);">
+        <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:6px;">Occupancy Rate — Tasa de ocupación</div>
+        <div class="formula"><strong>Occ%</strong> = Noches vendidas / Noches disponibles</div>
+        <p style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;">Qué porcentaje del tiempo disponible se vendió. Una propiedad con 30 noches disponibles y 20 vendidas tiene 67% de ocupación.</p>
+      </div>
+      <div style="padding:12px;background:#F8F9FA;border-radius:6px;border:1px solid var(--dim);">
+        <div style="font-size:11px;font-weight:700;color:var(--orange);margin-bottom:6px;">RevPAR — Revenue Per Available Night</div>
+        <div class="formula"><strong>RevPAR</strong> = ADR × Tasa de ocupación</div>
+        <p style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6;">El indicador más importante del desempeño STR. Combina tarifa y ocupación en un solo número. <strong>Bocas del Toro: ~$152 RevPAR.</strong></p>
+      </div>
+      <div style="padding:12px;background:#F8F9FA;border-radius:6px;border:1px solid var(--dim);">
+        <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:6px;">Market Score — Puntaje del mercado</div>
+        <p style="font-size:11px;color:var(--muted);line-height:1.6;">AirDNA califica cada mercado de 0-100 basado en demanda, crecimiento, competencia, estacionalidad y regulación. <strong>Sobre 70 = mercado atractivo para inversión STR.</strong></p>
+      </div>
+      <div style="padding:12px;background:#F8F9FA;border-radius:6px;border:1px solid var(--dim);">
+        <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:6px;">Seasonality — Estacionalidad</div>
+        <p style="font-size:11px;color:var(--muted);line-height:1.6;">La variación entre el mes de mayor demanda y el de menor. Mercados con estacionalidad alta (&gt;40% de diferencia) requieren presupuestar meses de baja con el NOI de los meses de alta.</p>
+      </div>
+      <div style="padding:12px;background:#F8F9FA;border-radius:6px;border:1px solid var(--dim);">
+        <div style="font-size:11px;font-weight:700;color:var(--teal);margin-bottom:6px;">Revenue Potential — Potencial de ingresos</div>
+        <p style="font-size:11px;color:var(--muted);line-height:1.6;">La estimación de AirDNA del ingreso bruto anual máximo alcanzable para una propiedad similar en ese mercado con gestión profesional activa.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════
+const MARKETS = {
+  bocas:    {name:'Bocas del Toro',adr:245,adr_lux:1200,occ:62,revpar:152,score:78,trend:'📈',seasons:[
+    {name:'Alta (Ene-Mar, Jul)',color:'#1E8E3E',rate:1400,occ:75,months:4},
+    {name:'Media (Abr-Jun, Nov)',color:'#E37400',rate:1000,occ:60,months:5},
+    {name:'Baja (Ago-Oct, Dic)',color:'#D93025',rate:700,occ:42,months:3},
+  ]},
+  boquete:  {name:'Boquete',adr:185,adr_lux:750,occ:58,revpar:107,score:71,trend:'📈',seasons:[
+    {name:'Alta (Dic-Mar)',color:'#1E8E3E',rate:850,occ:72,months:4},
+    {name:'Media (Abr-Jun)',color:'#E37400',rate:620,occ:55,months:3},
+    {name:'Baja (Jul-Nov)',color:'#D93025',rate:480,occ:40,months:5},
+  ]},
+  casco:    {name:'Casco Viejo, Panamá',adr:165,adr_lux:550,occ:68,revpar:112,score:74,trend:'➡',seasons:[
+    {name:'Alta (Ene-Abr, Jul)',color:'#1E8E3E',rate:600,occ:78,months:5},
+    {name:'Media (May-Jun, Nov)',color:'#E37400',rate:450,occ:65,months:4},
+    {name:'Baja (Ago-Oct, Dic)',color:'#D93025',rate:330,occ:52,months:3},
+  ]},
+  venao:    {name:'Playa Venao',adr:210,adr_lux:900,occ:55,revpar:116,score:68,trend:'📈',seasons:[
+    {name:'Alta (Ene-Mar, Jul)',color:'#1E8E3E',rate:1000,occ:68,months:4},
+    {name:'Media (Abr-Jun)',color:'#E37400',rate:720,occ:55,months:3},
+    {name:'Baja (Ago-Dic)',color:'#D93025',rate:520,occ:38,months:5},
+  ]},
+  tulum:    {name:'Tulum, México',adr:380,adr_lux:1800,occ:70,revpar:266,score:87,trend:'📈',seasons:[
+    {name:'Alta (Dic-Mar, Jul)',color:'#1E8E3E',rate:1900,occ:82,months:5},
+    {name:'Media (Abr-Jun)',color:'#E37400',rate:1400,occ:68,months:3},
+    {name:'Baja (Ago-Nov)',color:'#D93025',rate:900,occ:52,months:4},
+  ]},
+  cartagena:{name:'Cartagena, Colombia',adr:220,adr_lux:800,occ:63,revpar:139,score:75,trend:'📈',seasons:[
+    {name:'Alta (Dic-Mar, Jul)',color:'#1E8E3E',rate:880,occ:75,months:5},
+    {name:'Media (Abr-Jun, Nov)',color:'#E37400',rate:640,occ:60,months:4},
+    {name:'Baja (Ago-Oct)',color:'#D93025',rate:440,occ:45,months:3},
+  ]},
+  manuel:   {name:'Manuel Antonio, CR',adr:290,adr_lux:1400,occ:65,revpar:189,score:80,trend:'📈',seasons:[
+    {name:'Alta (Dic-Mar, Jul)',color:'#1E8E3E',rate:1500,occ:78,months:5},
+    {name:'Media (Abr-Jun)',color:'#E37400',rate:1100,occ:62,months:3},
+    {name:'Baja (Ago-Nov)',color:'#D93025',rate:750,occ:48,months:4},
+  ]},
+  punta:    {name:'Punta Cana, R.D.',adr:280,adr_lux:1300,occ:68,revpar:190,score:76,trend:'➡',seasons:[
+    {name:'Alta (Dic-Mar)',color:'#1E8E3E',rate:1400,occ:80,months:4},
+    {name:'Media (Abr-Jun, Nov)',color:'#E37400',rate:1000,occ:65,months:4},
+    {name:'Baja (Jul-Oct)',color:'#D93025',rate:720,occ:52,months:4},
+  ]},
+  sanjuan:  {name:'San Juan, P.R.',adr:350,adr_lux:1700,occ:72,revpar:252,score:84,trend:'📈',seasons:[
+    {name:'Alta (Ene-Mar, Jul)',color:'#1E8E3E',rate:1800,occ:82,months:5},
+    {name:'Media (Abr-Jun, Nov)',color:'#E37400',rate:1300,occ:70,months:4},
+    {name:'Baja (Ago-Oct)',color:'#D93025',rate:900,occ:56,months:3},
+  ]},
+  medellin: {name:'Medellín, Colombia',adr:145,adr_lux:480,occ:71,revpar:103,score:72,trend:'📈',seasons:[
+    {name:'Alta (Dic-Mar, Jul)',color:'#1E8E3E',rate:520,occ:80,months:5},
+    {name:'Media (Abr-Jun)',color:'#E37400',rate:370,occ:70,months:3},
+    {name:'Baja (Ago-Nov)',color:'#D93025',rate:260,occ:58,months:4},
+  ]},
+  custom:   {name:'Mercado personalizado',adr:300,adr_lux:1200,occ:60,revpar:180,score:70,trend:'—',seasons:[
+    {name:'Alta temporada',color:'#1E8E3E',rate:1200,occ:72,months:4},
+    {name:'Media temporada',color:'#E37400',rate:800,occ:58,months:5},
+    {name:'Baja temporada',color:'#D93025',rate:550,occ:40,months:3},
+  ]},
+};
+
+// Season state
+let seasons = [];
+
+// Charts
+let chMonthly=null, chGastos=null, chRoiComp=null, chFlujo=null;
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+function init(){
+  const mktKey = document.getElementById('s-mercado').value;
+  seasons = JSON.parse(JSON.stringify(MARKETS[mktKey].seasons));
+  renderSeasons();
+  calcAll();
+}
+
+function goTab(id, el){
+  document.querySelectorAll('.tab-pane').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+// MARKET LOADING
+// ═══════════════════════════════════════════════════════════
+function loadMarket(){
+  const mkt = MARKETS[document.getElementById('s-mercado').value];
+  updateAirDNA(mkt);
+  calcAll();
+}
+
+function loadSeasonPreset(){
+  const mktKey = document.getElementById('s-mercado').value;
+  seasons = JSON.parse(JSON.stringify(MARKETS[mktKey].seasons));
+  renderSeasons();
+  calcAll();
+}
+
+function updateAirDNA(mkt){
+  document.getElementById('airdna-kpis').innerHTML = [
+    {label:'ADR Mercado promedio',val:'$'+mkt.adr+'/noche',c:'var(--blue)'},
+    {label:'ADR Villas lujo',val:'$'+(mkt.adr_lux)+'+/noche',c:'var(--gold)'},
+    {label:'Ocupación media',val:mkt.occ+'%',c:'var(--green)'},
+    {label:'RevPAR del mercado',val:'$'+mkt.revpar,c:'var(--orange)'},
+  ].map(({label,val,c})=>`
+    <div style="background:#F8F9FA;border:1px solid var(--dim);border-radius:6px;padding:12px;text-align:center;">
+      <div style="font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">${label}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:${c};font-weight:300;">${val}</div>
+    </div>`).join('');
+  document.getElementById('airdna-insight').className='info';
+  document.getElementById('airdna-insight').innerHTML=`<div class="info-ttl">💡 Insight del mercado: ${mkt.name}</div>
+    <p>Market Score AirDNA: <strong>${mkt.score}/100</strong> · Tendencia: <strong>${mkt.trend}</strong><br>
+    El RevPAR de <strong>$${mkt.revpar}/noche</strong> indica que una propiedad premium puede proyectar ingresos brutos superiores al promedio si la gestión es activa. El percentil 90 del mercado genera <strong>$${mkt.adr_lux}+/noche</strong> en temporada alta.</p>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// SEASONS
+// ═══════════════════════════════════════════════════════════
+function renderSeasons(){
+  const c = document.getElementById('seasons-container');
+  c.innerHTML = seasons.map((s,i)=>`
+    <div class="season-row">
+      <div class="season-name"><span class="season-dot" style="background:${s.color}"></span>${s.name}</div>
+      <input type="number" value="${s.rate}" min="0" step="50" onchange="seasons[${i}].rate=parseFloat(this.value)||0;calcAll()" style="background:#FFF;border:1px solid #DADCE0;padding:6px 8px;font-size:12px;font-family:'Outfit',sans-serif;border-radius:4px;text-align:right;">
+      <input type="number" value="${s.occ}" min="0" max="100" onchange="seasons[${i}].occ=parseFloat(this.value)||0;calcAll()" style="background:#FFF;border:1px solid #DADCE0;padding:6px 8px;font-size:12px;font-family:'Outfit',sans-serif;border-radius:4px;text-align:right;">
+      <input type="number" value="${s.months}" min="1" max="12" onchange="seasons[${i}].months=parseInt(this.value)||1;normMonths(${i});calcAll()" style="background:#FFF;border:1px solid #DADCE0;padding:6px 8px;font-size:12px;font-family:'Outfit',sans-serif;border-radius:4px;text-align:right;">
+      <div style="font-size:11px;color:var(--muted);text-align:right;">${Math.round(seasons[i].months*30.4*seasons[i].occ/100)} noches</div>
+      <button onclick="removeSeason(${i})" style="background:transparent;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button>
+    </div>`).join('');
+}
+
+function normMonths(idx){ /* optional: auto-rebalance months */ }
+
+function addSeason(){
+  seasons.push({name:'Nueva temporada',color:'#8430CE',rate:800,occ:55,months:1});
+  renderSeasons(); calcAll();
+}
+function removeSeason(i){
+  if(seasons.length<=1) return;
+  seasons.splice(i,1); renderSeasons(); calcAll();
+}
+
+// ═══════════════════════════════════════════════════════════
+// CORE CALCULATIONS
+// ═══════════════════════════════════════════════════════════
+const G = id => parseFloat(document.getElementById(id)?.value)||0;
+const fmt = n => '$'+Math.abs(Math.round(n)).toLocaleString('en-US');
+const fmtP = n => n.toFixed(1)+'%';
+const fmtX = n => n.toFixed(1)+'x';
+
+function getMonthData(){
+  // Distribute seasons across 12 months
+  const MONTH_NAMES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const totalMonths = seasons.reduce((a,s)=>a+s.months,0);
+  const months = [];
+  let mi=0;
+  seasons.forEach((s,si)=>{
+    for(let m=0;m<s.months&&mi<12;m++,mi++){
+      const daysInMonth=[31,28,31,30,31,30,31,31,30,31,30,31][mi];
+      const nights = Math.round(daysInMonth * s.occ/100);
+      const income = nights * s.rate;
+      months.push({name:MONTH_NAMES[mi],season:s.name,color:s.color,rate:s.rate,occ:s.occ,nights,income,days:daysInMonth});
+    }
+  });
+  // Fill remaining months with last season
+  while(months.length<12){
+    const s=seasons[seasons.length-1];
+    const mi2=months.length;
+    const daysInMonth=[31,28,31,30,31,30,31,31,30,31,30,31][mi2];
+    const nights=Math.round(daysInMonth*s.occ/100);
+    months.push({name:MONTH_NAMES[mi2],season:s.name,color:s.color,rate:s.rate,occ:s.occ,nights,income:nights*s.rate,days:daysInMonth});
+  }
+  return months;
+}
+
+function getExpenses(){
+  const mgmtPct = G('g-mgmt')/100;
+  const cleanPerStay = G('g-clean');
+  const staysPerMonth = G('g-stays');
+  const fixed = G('g-elec')+G('g-agua')+G('g-internet')+G('g-hoa')+G('g-seguro')+G('g-impuesto')+G('g-mant')+G('g-sumin')+G('g-mkt');
+  return {mgmtPct, cleanPerStay, staysPerMonth, fixed};
+}
+
+function calcAll(){
+  const mkt = MARKETS[document.getElementById('s-mercado').value];
+  updateAirDNA(mkt);
+  
+  const months = getMonthData();
+  const exp = getExpenses();
+  const inversion = G('s-inversion');
+  const airbnbFee = 0.03;
+  
+  // Aggregate
+  let totalBruto=0, totalNoches=0;
+  const weightedRateSum={r:0,o:0,rn:0,on:0};
+  months.forEach(m=>{
+    totalBruto+=m.income;
+    totalNoches+=m.nights;
+    weightedRateSum.r+=m.rate*m.nights;
+    weightedRateSum.o+=m.occ*m.days;
+    weightedRateSum.rn+=m.nights;
+    weightedRateSum.on+=m.days;
+  });
+  const adrProm = totalNoches>0?totalBruto/totalNoches:0;
+  const occProm = weightedRateSum.on>0?weightedRateSum.o/weightedRateSum.on:0;
+  const revpar = adrProm * occProm/100;
+  const feeAirbnb = totalBruto * airbnbFee;
+  
+  // Expenses
+  const mgmtTotal = totalBruto * exp.mgmtPct;
+  const cleanTotal = exp.cleanPerStay * exp.staysPerMonth * 12;
+  const fixedTotal = exp.fixed * 12;
+  const totalGastos = mgmtTotal + cleanTotal + fixedTotal + feeAirbnb;
+  const noi = totalBruto - totalGastos;
+  const margen = totalBruto>0?noi/totalBruto:0;
+
+  // Tab 1 KPIs
+  document.getElementById('k-revpar').textContent = '$'+Math.round(revpar)+'/noche';
+  document.getElementById('k-ingbr-mes').textContent = fmt(totalBruto/12);
+  document.getElementById('k-ingbr-ano').textContent = fmt(totalBruto);
+  document.getElementById('k-adr-prom').textContent = '$'+Math.round(adrProm);
+  document.getElementById('k-occ-prom').textContent = fmtP(occProm);
+  document.getElementById('k-noches').textContent = totalNoches;
+  document.getElementById('k-fee-airbnb').textContent = fmt(feeAirbnb);
+
+  // Tab 2 KPIs
+  document.getElementById('k2-noi-ano').textContent = fmt(noi);
+  document.getElementById('k2-noi-mes').textContent = fmt(noi/12);
+  document.getElementById('k2-margen').textContent = fmtP(margen*100);
+  document.getElementById('k2-gastos').textContent = fmt(totalGastos);
+  document.getElementById('k2-ratio-g').textContent = fmtP(totalGastos/totalBruto*100);
+
+  // Gasto breakdown
+  const gastoItems=[
+    {label:'Property management ('+G('g-mgmt')+'%)',val:mgmtTotal,c:'#D93025'},
+    {label:'Tarifa Airbnb (3%)',val:feeAirbnb,c:'#FF385C'},
+    {label:'Limpieza',val:cleanTotal,c:'#E37400'},
+    {label:'Electricidad',val:G('g-elec')*12,c:'#F0C000'},
+    {label:'HOA / Mantenimiento',val:G('g-hoa')*12,c:'#1A73E8'},
+    {label:'Seguro',val:G('g-seguro')*12,c:'#9B7A45'},
+    {label:'Reparaciones',val:G('g-mant')*12,c:'#8430CE'},
+    {label:'Otros fijos',val:(G('g-agua')+G('g-internet')+G('g-impuesto')+G('g-sumin')+G('g-mkt'))*12,c:'#5F6368'},
+  ];
+  document.getElementById('gasto-breakdown').innerHTML = gastoItems.map(({label,val,c})=>{
+    const pct=totalGastos>0?val/totalGastos*100:0;
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <div style="width:8px;height:8px;border-radius:2px;background:${c};flex-shrink:0;"></div>
+      <div style="flex:1;font-size:11px;color:var(--muted);">${label}</div>
+      <div style="font-size:11px;font-weight:500;color:var(--text);min-width:60px;text-align:right;">${fmt(val)}</div>
+      <div style="font-size:10px;color:var(--muted);min-width:32px;text-align:right;">${pct.toFixed(0)}%</div>
+    </div>`;
+  }).join('');
+
+  // ROI indicators
+  const deudaPct = G('r-deuda-pct')/100;
+  const equity = inversion*(1-deudaPct);
+  const deuda = inversion*deudaPct;
+  const tasaHip = G('r-tasa')/100;
+  const plazoHip = G('r-plazo');
+  const cuotaAnual = deuda>0?calcPmt(deuda,tasaHip,plazoHip)*12:0;
+  const coc = equity>0?(noi-cuotaAnual)/equity*100:0;
+  const capRate = inversion>0?noi/inversion*100:0;
+  const grm = totalBruto>0?inversion/totalBruto:0;
+  const payback = noi>0?inversion/noi:0;
+  
+  document.getElementById('k3-caprate').textContent = fmtP(capRate);
+  document.getElementById('k3-coc').textContent = fmtP(coc);
+  document.getElementById('k3-grm').textContent = fmtX(grm);
+  document.getElementById('k3-payback').textContent = payback.toFixed(1)+' años';
+  document.getElementById('k3-wacc-label').textContent = G('r-wacc');
+  
+  // Payback bar
+  const maxPayback=30;
+  const pctPayback=Math.min(payback/maxPayback*100,100);
+  const pbFill=document.getElementById('payback-fill');
+  pbFill.style.width=pctPayback+'%';
+  pbFill.textContent=payback.toFixed(1)+' años';
+  pbFill.style.background=payback<10?'var(--green)':payback<15?'var(--orange)':'var(--red)';
+  document.getElementById('payback-label').textContent=payback<10?'✓ Excelente — por debajo de 10 años':payback<15?'⚠ Bueno — objetivo: menos de 12 años':'Largo — considera mejorar el NOI o ajustar el precio de compra';
+
+  // Multi-year projection
+  const horizonte = parseInt(document.getElementById('r-horizonte').value);
+  document.getElementById('horizonte-label').textContent=horizonte;
+  document.getElementById('k3-h-label').textContent=horizonte;
+  document.getElementById('k3-h-label2').textContent=horizonte;
+  
+  const aprecPct = G('r-apreciacion')/100;
+  const aumentoTarifa = G('r-aumento-tarifa')/100;
+  const aumentoGastos = G('r-aumento-gastos')/100;
+  const wacc = G('r-wacc')/100;
+  
+  let flows=[-equity], cumulativeNOI=0, cumulativeTotal=0;
+  let valorPropiedad=inversion;
+  let tbHTML='';
+  
+  for(let y=1;y<=horizonte;y++){
+    const ingBrutoY=totalBruto*Math.pow(1+aumentoTarifa,y-1);
+    const gastosY=totalGastos*Math.pow(1+aumentoGastos,y-1);
+    const noiY=ingBrutoY-gastosY;
+    const flujoNetoY=noiY-cuotaAnual;
+    valorPropiedad=inversion*Math.pow(1+aprecPct,y);
+    cumulativeNOI+=noiY;
+    cumulativeTotal=cumulativeNOI+(valorPropiedad-inversion);
+    const roiAcum=cumulativeTotal/equity*100;
+    flows.push(flujoNetoY);
+    tbHTML+=`<tr class="${y===horizonte?'tr-gold':''}">
+      <td>${y}</td><td class="rt pos">${fmt(ingBrutoY)}</td><td class="rt pos">${fmt(noiY)}</td>
+      <td class="rt neg">${fmt(cuotaAnual)}</td><td class="rt ${flujoNetoY>=0?'pos':'neg'}">${fmt(flujoNetoY)}</td>
+      <td class="rt">${fmt(valorPropiedad)}</td><td class="rt neu">${fmt(cumulativeTotal)}</td>
+      <td class="ct ${roiAcum>=0?'pos':'neg'}">${fmtP(roiAcum)}</td>
+    </tr>`;
+  }
+  document.getElementById('tb-proyeccion').innerHTML=tbHTML;
+  document.getElementById('k3-ret-total').textContent=fmt(cumulativeTotal);
+  document.getElementById('k3-roi-total').textContent=fmtP(cumulativeTotal/equity*100);
+
+  // IRR estimation
+  const irr=calcIRR(flows);
+  document.getElementById('k3-irr').textContent=irr?fmtP(irr*100):'N/C';
+
+  // VPN
+  const vpn = flows.slice(1).reduce((acc,f,i)=>acc+f/Math.pow(1+wacc,i+1),0)+
+    (valorPropiedad)/Math.pow(1+wacc,horizonte) - equity;
+  document.getElementById('k3-vpn').textContent=fmt(vpn);
+  document.getElementById('k3-vpn-sub').textContent=vpn>0?'✓ VPN positivo — el proyecto crea valor al '+G('r-wacc')+'% WACC':'✗ VPN negativo al '+G('r-wacc')+'% WACC';
+
+  // Monthly table
+  buildMonthlyTable(months,exp,airbnbFee);
+  // Occupancy visual
+  buildOccVisual(months);
+  // Charts
+  updateCharts(months,gastoItems,totalBruto,noi,capRate,coc,payback,horizonte,flows,inversion,equity,aprecPct,noiY=>noiY);
+
+  // Load presets for ROI comparison
+}
+
+function calcPmt(principal,annualRate,years){
+  if(annualRate===0) return principal/years/12;
+  const r=annualRate/12,n=years*12;
+  return principal*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+}
+
+function calcIRR(flows){
+  let lo=-0.99,hi=5,guess;
+  for(let i=0;i<100;i++){
+    guess=(lo+hi)/2;
+    let npv=flows.reduce((acc,f,t)=>acc+f/Math.pow(1+guess,t),0);
+    if(Math.abs(npv)<0.01) return guess;
+    npv>0?lo=guess:hi=guess;
+  }
+  return guess;
+}
+
+function buildMonthlyTable(months,exp,airbnbFee){
+  const tbody=document.getElementById('tb-mensual');
+  const tfoot=document.getElementById('tf-mensual');
+  let totBruto=0,totFee=0,totGastos=0,totNOI=0,totNoches=0;
+  tbody.innerHTML=months.map((m,i)=>{
+    const fee=m.income*airbnbFee;
+    const mgmt=m.income*exp.mgmtPct;
+    const clean=exp.cleanPerStay*exp.staysPerMonth;
+    const fixed=exp.fixed;
+    const gastos=fee+mgmt+clean+fixed;
+    const noi=m.income-gastos;
+    const margen=m.income>0?noi/m.income*100:0;
+    totBruto+=m.income;totFee+=fee;totGastos+=gastos;totNOI+=noi;totNoches+=m.nights;
+    return `<tr>
+      <td><strong>${m.name}</strong></td>
+      <td><span style="background:${m.color}20;color:${m.color};font-size:10px;padding:2px 7px;border-radius:10px;">${m.season}</span></td>
+      <td class="rt">${m.nights}</td>
+      <td class="rt pos">${fmt(m.income)}</td>
+      <td class="rt neg">${fmt(fee)}</td>
+      <td class="rt neg">${fmt(gastos)}</td>
+      <td class="rt ${noi>=0?'pos':'neg'}">${fmt(noi)}</td>
+      <td class="rt ${margen>=40?'pos':margen>=20?'neu':'neg'}">${fmtP(margen)}</td>
+    </tr>`;
+  }).join('');
+  tfoot.innerHTML=`<tr style="background:#F8F9FA;font-weight:600;">
+    <td colspan="2">TOTAL ANUAL</td>
+    <td class="rt">${totNoches}</td>
+    <td class="rt pos">${fmt(totBruto)}</td>
+    <td class="rt neg">${fmt(totFee)}</td>
+    <td class="rt neg">${fmt(totGastos)}</td>
+    <td class="rt pos">${fmt(totNOI)}</td>
+    <td class="rt pos">${fmtP(totBruto>0?totNOI/totBruto*100:0)}</td>
+  </tr>`;
+}
+
+function buildOccVisual(months){
+  const container=document.getElementById('occ-visual');
+  const cells=[];
+  months.forEach(m=>{
+    for(let d=0;d<m.days;d++){
+      const occupied=d<m.nights;
+      cells.push(`<div class="occ-night" style="background:${occupied?m.color:'#E8EAED'};" title="${m.name}: ${occupied?'Ocupada':'Vacante'}"></div>`);
+    }
+  });
+  container.innerHTML=cells.join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════════════════
+function updateCharts(months,gastoItems,totalBruto,noi,capRate,coc,payback,horizonte,flows,inversion,equity,aprecPct){
+  // Monthly income bar
+  const mLabels=months.map(m=>m.name);
+  const mVals=months.map(m=>m.income);
+  const mColors=months.map(m=>m.color+'CC');
+  if(chMonthly){chMonthly.data.labels=mLabels;chMonthly.data.datasets[0].data=mVals;chMonthly.data.datasets[0].backgroundColor=mColors;chMonthly.update();}
+  else chMonthly=new Chart(document.getElementById('ch-monthly'),{type:'bar',
+    data:{labels:mLabels,datasets:[{data:mVals,backgroundColor:mColors,borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:d=>' '+fmt(d.raw)}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#5F6368',font:{size:9}}},
+               y:{grid:{color:'#F0F2F5'},ticks:{color:'#5F6368',callback:v=>'$'+Math.round(v/1000)+'K'}}}}});
+
+  // Gastos donut
+  const gLabels=gastoItems.map(g=>g.label);
+  const gVals=gastoItems.map(g=>g.val);
+  const gColors=gastoItems.map(g=>g.c);
+  if(chGastos){chGastos.data.labels=gLabels;chGastos.data.datasets[0].data=gVals;chGastos.data.datasets[0].backgroundColor=gColors;chGastos.update();}
+  else chGastos=new Chart(document.getElementById('ch-gastos'),{type:'doughnut',
+    data:{labels:gLabels,datasets:[{data:gVals,backgroundColor:gColors,borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:d=>' '+fmt(d.raw)}}}}});
+
+  // ROI comparison bar
+  const roiStr=noi>0?(inversion>0?noi/inversion*100:0):0;
+  const compLabels=['STR tu propiedad','Bolsa S&P 500','Depósito bancario','Bonos del tesoro','Renta tradicional'];
+  const compVals=[roiStr,11,4.5,4.7,5.5];
+  const compColors=['#1E8E3E','#1A73E8','#9B7A45','#E37400','#8430CE'];
+  if(chRoiComp){chRoiComp.data.datasets[0].data=compVals;chRoiComp.update();}
+  else chRoiComp=new Chart(document.getElementById('ch-roi-comp'),{type:'bar',
+    data:{labels:compLabels,datasets:[{data:compVals,backgroundColor:compColors,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:d=>' '+d.raw.toFixed(1)+'%'}}},
+      scales:{x:{grid:{color:'#F0F2F5'},ticks:{color:'#5F6368',callback:v=>v+'%'}},
+               y:{grid:{display:false},ticks:{color:'#5F6368',font:{size:9}}}}}});
+
+  // Flujo acumulado
+  let cumFlows=[],cum=0;
+  flows.forEach((f,i)=>{if(i>0){cum+=f;cumFlows.push(Math.round(cum));}else{cumFlows.push(0);}});
+  const flabels=['Inversión',...Array.from({length:horizonte},(_, i)=>'Año '+(i+1))];
+  const fcolors=cumFlows.map(v=>v>=0?'rgba(30,142,62,0.7)':'rgba(217,48,37,0.7)');
+  if(chFlujo){chFlujo.data.labels=flabels;chFlujo.data.datasets[0].data=[-equity,...cumFlows.slice(1)];chFlujo.data.datasets[0].backgroundColor=[-equity,...cumFlows.slice(1)].map(v=>v>=0?'rgba(30,142,62,0.7)':'rgba(217,48,37,0.7)');chFlujo.update();}
+  else chFlujo=new Chart(document.getElementById('ch-flujo'),{type:'bar',
+    data:{labels:flabels,datasets:[{data:[-equity,...cumFlows.slice(1)],backgroundColor:[-equity,...cumFlows.slice(1)].map(v=>v>=0?'rgba(30,142,62,0.7)':'rgba(217,48,37,0.7)'),borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:d=>' '+fmt(d.raw)}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#5F6368',font:{size:9}}},
+               y:{grid:{color:'#F0F2F5'},ticks:{color:'#5F6368',callback:v=>'$'+Math.round(v/1000)+'K'}}}}});
+}
+
+// INIT
+window.addEventListener('load',init);
+</script>
+</body>
+</html>
